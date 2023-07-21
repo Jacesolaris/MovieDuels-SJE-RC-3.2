@@ -15954,7 +15954,7 @@ int G_SaberLockStrength(const gentity_t* gent)
 
 				if (gent->client->NPC_class == CLASS_DESANN || gent->client->NPC_class == CLASS_VADER || gent->client->NPC_class == CLASS_LUKE)
 				{
-					strength += 5 + gent->client->ps.forcePowerLevel[FP_SABER_OFFENSE];
+					strength += 5 + gent->client->ps.forcePowerLevel[FP_SABER_OFFENSE] + Q_irand(0, g_spskill->integer);
 				}
 				else
 				{

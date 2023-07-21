@@ -8454,7 +8454,7 @@ static void CG_Draw2D()
 	}
 
 
-	if (cg.predicted_player_state.communicatingflags & (1 << CF_SABERLOCK_ADVANCE))
+	//if (cg.predicted_player_state.communicatingflags & (1 << CF_SABERLOCK_ADVANCE))
 	//if (cg.predicted_player_state.communicatingflags & (1 << CF_SABERLOCKING))
 	//if (cg.predicted_player_state.communicatingflags & (1 << PROJECTING))
 	//if (cg.predicted_player_state.pm_flags & PMF_BLOCK_HELD)
@@ -8465,10 +8465,10 @@ static void CG_Draw2D()
 	//if (cg.predicted_player_state.ManualBlockingFlags & 1 << MBF_ACCURATEMISSILEBLOCKING)
 	//if (cg.predicted_player_state.ManualBlockingFlags & 1 << MBF_NPCBLOCKSTANCE)
 	//if (cg.predicted_player_state.ManualBlockingFlags & 1 << MBF_MISSILESTASIS)
-	{//test for all sorts of shit... does it work? show me.
-		CG_DrawPic(0, 0, 640, 480, cgi_R_RegisterShader("gfx/2d/jsense"));
-		CG_DrawPic(0, 0, 640, 480, cgi_R_RegisterShader("gfx/2d/droid_view"));
-	}
+	//{//test for all sorts of shit... does it work? show me.
+		//CG_DrawPic(0, 0, 640, 480, cgi_R_RegisterShader("gfx/2d/jsense"));
+		//CG_DrawPic(0, 0, 640, 480, cgi_R_RegisterShader("gfx/2d/droid_view"));
+	//}
 
 	if (cg_debugHealthBars.integer)
 	{
