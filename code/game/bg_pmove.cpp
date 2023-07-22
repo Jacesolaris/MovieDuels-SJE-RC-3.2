@@ -15946,7 +15946,7 @@ int G_SaberLockStrength(const gentity_t* gent)
 	{//have moved to next frame since last lock push
 		if (gent->s.number >= MAX_CLIENTS && !PM_ControlledByPlayer())
 		{
-			gent->client->ps.saberLockHitCheckTime = level.time + 250; //check for AI pushes much slower.
+			gent->client->ps.saberLockHitCheckTime = level.time + 25; //check for AI pushes much slower.
 
 			if (gent->client->ps.saberLockHitIncrementTime < level.time)
 			{//have moved to next frame since last saberlock attack button press
@@ -15954,11 +15954,11 @@ int G_SaberLockStrength(const gentity_t* gent)
 
 				if (gent->client->NPC_class == CLASS_DESANN || gent->client->NPC_class == CLASS_VADER || gent->client->NPC_class == CLASS_LUKE)
 				{
-					strength += 5 + gent->client->ps.forcePowerLevel[FP_SABER_OFFENSE] + Q_irand(0, g_spskill->integer);
+					strength += 2 + gent->client->ps.forcePowerLevel[FP_SABER_OFFENSE] + Q_irand(0, g_spskill->integer);
 				}
 				else
 				{
-					strength += gent->client->ps.forcePowerLevel[FP_SABER_OFFENSE];
+					strength += gent->client->ps.forcePowerLevel[FP_SABER_OFFENSE] + Q_irand(0, g_spskill->integer);
 				}
 			}
 		}
@@ -15979,7 +15979,7 @@ int G_SaberLockStrength(const gentity_t* gent)
 					}
 					else
 					{
-						strength += pm->cmd.buttons & BUTTON_ATTACK;
+						strength += pm->cmd.buttons & BUTTON_ATTACK + Q_irand(0, g_spskill->integer);
 					}
 				}
 				else
