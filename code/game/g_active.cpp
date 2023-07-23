@@ -186,6 +186,7 @@ extern bool in_camera;
 extern qboolean player_locked;
 extern qboolean stop_icarus;
 extern qboolean MatrixMode;
+extern qboolean SaberlockCamMode;
 
 extern cvar_t* g_spskill;
 extern cvar_t* g_timescale;
@@ -3592,23 +3593,16 @@ qboolean G_CheckClampUcmd(gentity_t* ent, usercmd_t* ucmd)
 	{
 		if (ent->client->ps.communicatingflags & (1 << CF_SABERLOCKING))
 		{
-			MatrixMode = qtrue;
+			cg.overrides.active |= CG_OVERRIDE_3RD_PERSON_RNG | CG_OVERRIDE_FOV;
 
-			cg.overrides.active |= CG_OVERRIDE_3RD_PERSON_RNG | CG_OVERRIDE_3RD_PERSON_ANG | CG_OVERRIDE_3RD_PERSON_VOF | CG_OVERRIDE_3RD_PERSON_POF | CG_OVERRIDE_FOV | CG_OVERRIDE_3RD_PERSON_HOF | CG_OVERRIDE_3RD_PERSON_CDP;
-
-			cg.overrides.thirdPersonAngle = 22.5f;
-			cg.overrides.thirdPersonPitchOffset = -11.25f;
 			cg.overrides.thirdPersonRange = 60.0f;
-			cg.overrides.thirdPersonVertOffset = -9.0f;
-			cg.overrides.thirdPersonHorzOffset = -12.5f;
 			cg.overrides.thirdPersonCameraDamp = 1;
 			cg.overrides.fov = 31;
 		}
 		else
 		{
-			MatrixMode = qfalse;
-			cg.overrides.active &= ~(CG_OVERRIDE_3RD_PERSON_RNG | CG_OVERRIDE_3RD_PERSON_ANG | CG_OVERRIDE_3RD_PERSON_VOF | CG_OVERRIDE_3RD_PERSON_POF | CG_OVERRIDE_FOV | CG_OVERRIDE_3RD_PERSON_HOF | CG_OVERRIDE_3RD_PERSON_CDP);
-			cg.overrides.thirdPersonRange = cg.overrides.thirdPersonVertOffset = cg.overrides.thirdPersonAngle = cg.overrides.thirdPersonPitchOffset = cg.overrides.thirdPersonHorzOffset = cg.overrides.thirdPersonCameraDamp = 0;
+			cg.overrides.active &= ~(CG_OVERRIDE_3RD_PERSON_RNG | CG_OVERRIDE_FOV);
+			cg.overrides.thirdPersonRange = cg.overrides.thirdPersonCameraDamp = 0;
 		}
 	}
 
@@ -5935,8 +5929,7 @@ qboolean G_CheckClampUcmd(gentity_t* ent, usercmd_t* ucmd)
 			{
 				if (!MatrixMode)
 				{
-					cg.overrides.active &= ~(CG_OVERRIDE_3RD_PERSON_RNG | CG_OVERRIDE_3RD_PERSON_POF |
-						CG_OVERRIDE_3RD_PERSON_ANG);
+					cg.overrides.active &= ~(CG_OVERRIDE_3RD_PERSON_RNG | CG_OVERRIDE_3RD_PERSON_POF | CG_OVERRIDE_3RD_PERSON_ANG);
 					cg.overrides.thirdPersonRange = 0;
 				}
 			}

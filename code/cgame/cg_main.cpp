@@ -472,6 +472,8 @@ vmCvar_t cg_jkoeffects;
 
 vmCvar_t cg_hudRatio;
 
+vmCvar_t cg_saberLockCinematicCamera;
+
 vmCvar_t cg_allowcallout;
 
 vmCvar_t cg_allowcalloutmarker;
@@ -689,6 +691,8 @@ static cvarTable_t cvarTable[] = {
 	{&cg_allowcalloutmarker, "g_allowattackordermarker", "1", CVAR_ARCHIVE},
 
 	{&cg_com_kotor, "com_kotor", "0", CVAR_ARCHIVE | CVAR_SAVEGAME | CVAR_NORESTART },
+
+	{&cg_saberLockCinematicCamera, "g_saberLockCinematicCamera", "0", CVAR_ARCHIVE },
 };
 
 static constexpr size_t cvarTableSize = std::size(cvarTable);

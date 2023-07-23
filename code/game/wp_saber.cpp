@@ -5623,6 +5623,7 @@ qboolean WP_SabersCheckLock2(gentity_t* attacker, gentity_t* defender, sabersLoc
 	}
 	else
 	{
+		const int index_start = Q_irand(1, 5);
 		if (lock_mode == LOCK_RANDOM)
 		{
 			lock_mode = static_cast<sabersLockMode_t>(Q_irand(LOCK_FIRST, static_cast<int>(LOCK_RANDOM) - 1));
@@ -5681,7 +5682,7 @@ qboolean WP_SabersCheckLock2(gentity_t* attacker, gentity_t* defender, sabersLoc
 			default:
 				return qfalse;
 			}
-			G_SoundOnEnt(attacker, CHAN_BODY, "sound/weapons/saber/saberlockstart.mp3");
+			G_Sound(attacker, G_SoundIndex(va("sound/weapons/saber/saber_locking_start%d.mp3", index_start)));
 		}
 		else
 		{
@@ -5809,7 +5810,7 @@ qboolean WP_SabersCheckLock2(gentity_t* attacker, gentity_t* defender, sabersLoc
 					return qfalse;
 				}
 			}
-			G_SoundOnEnt(attacker, CHAN_BODY, "sound/weapons/saber/saberlockstart.mp3");
+			G_Sound(attacker, G_SoundIndex(va("sound/weapons/saber/saber_locking_start%d.mp3", index_start)));
 		}
 	}
 	//set the proper anims

@@ -300,8 +300,7 @@ constexpr auto CG_OVERRIDE_3RD_PERSON_VOF = 0x00000008;
 constexpr auto CG_OVERRIDE_3RD_PERSON_POF = 0x00000010;
 constexpr auto CG_OVERRIDE_3RD_PERSON_CDP = 0x00000020;
 constexpr auto CG_OVERRIDE_3RD_PERSON_APH = 0x00000040;
-constexpr auto CG_OVERRIDE_3RD_PERSON_HOF = 0x00000080;
-constexpr auto CG_OVERRIDE_FOV = 0x00000100; // UPPED TO 100
+constexpr auto CG_OVERRIDE_FOV = 0x00000080;
 
 using overrides_t = struct
 {
@@ -714,6 +713,7 @@ extern vmCvar_t cg_setVaderBreath;
 extern vmCvar_t cg_setVaderBreathdamaged;
 
 extern vmCvar_t cg_hudRatio;
+extern vmCvar_t cg_saberLockCinematicCamera;
 
 extern vmCvar_t cg_saberinfo;
 
