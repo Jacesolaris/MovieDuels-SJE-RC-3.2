@@ -5681,6 +5681,7 @@ qboolean WP_SabersCheckLock2(gentity_t* attacker, gentity_t* defender, sabersLoc
 			default:
 				return qfalse;
 			}
+			G_SoundOnEnt(attacker, CHAN_BODY, "sound/weapons/saber/saberlockstart.mp3");
 		}
 		else
 		{
@@ -5808,6 +5809,7 @@ qboolean WP_SabersCheckLock2(gentity_t* attacker, gentity_t* defender, sabersLoc
 					return qfalse;
 				}
 			}
+			G_SoundOnEnt(attacker, CHAN_BODY, "sound/weapons/saber/saberlockstart.mp3");
 		}
 	}
 	//set the proper anims

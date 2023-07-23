@@ -407,18 +407,11 @@ static void CG_CalcIdealThirdPersonViewTarget()
 		cameraIdealTarget[2] += cg.overrides.thirdPersonVertOffset;
 		//VectorMA(cameraFocusLoc, cg.overrides.thirdPersonVertOffset, cameraup, cameraIdealTarget);
 	}
-	//else if (cg.overrides.active & CG_OVERRIDE_3RD_PERSON_HOF)
-	//{
-	//	// Add in a vertical offset from the viewpoint, which puts the actual target above the head, regardless of angle.
-	//	VectorCopy(cameraFocusLoc, cameraIdealTarget);
-	//	cameraIdealTarget[2] += cg.overrides.thirdPersonHorzOffset;
-	//}
 	else
 	{
 		// Add in a vertical offset from the viewpoint, which puts the actual target above the head, regardless of angle.
 		VectorCopy(cameraFocusLoc, cameraIdealTarget);
 		cameraIdealTarget[2] += cg_thirdPersonVertOffset.value;
-		//cameraIdealTarget[2] += cg_thirdPersonHorzOffset.value;
 	}
 
 	// Now, if the player is crouching, do a little special tweak.  The problem is that the player's head is way out of his bbox.
