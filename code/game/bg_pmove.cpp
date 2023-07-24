@@ -16095,10 +16095,12 @@ qboolean PM_SaberLocked()
 			if (PM_InSaberLock(pm->ps->torsoAnim) && pm->ps->torsoAnimTimer > 0)
 			{
 				pm->ps->torsoAnimTimer = 0;
+				G_Sound(pm->gent, G_SoundIndex(va("sound/weapons/saber/saber_locking_end%d.mp3", index_end)));
 			}
 			if (PM_InSaberLock(pm->ps->legsAnim) && pm->ps->legsAnimTimer > 0)
 			{
 				pm->ps->legsAnimTimer = 0;
+				G_Sound(pm->gent, G_SoundIndex(va("sound/weapons/saber/saber_locking_end%d.mp3", index_end)));
 			}
 			return qfalse;
 		}
@@ -16330,20 +16332,23 @@ qboolean PM_SaberLocked()
 		if (gent->painDebounceTime > level.time && genemy->painDebounceTime > level.time)
 		{
 			PM_SaberLockBreak(gent, genemy, LOCK_DRAW, 0);
+			G_Sound(pm->gent, G_SoundIndex(va("sound/weapons/saber/saber_locking_end%d.mp3", index_end)));
 		}
 		else if (gent->painDebounceTime > level.time)
 		{
 			PM_SaberLockBreak(genemy, gent, LOCK_VICTORY, 0);
+			G_Sound(pm->gent, G_SoundIndex(va("sound/weapons/saber/saber_locking_end%d.mp3", index_end)));
 		}
 		else if (genemy->painDebounceTime > level.time)
 		{
 			PM_SaberLockBreak(gent, genemy, LOCK_VICTORY, 0);
+			G_Sound(pm->gent, G_SoundIndex(va("sound/weapons/saber/saber_locking_end%d.mp3", index_end)));
 		}
 		else
 		{
 			PM_SaberLockBreak(gent, genemy, LOCK_STALEMATE, 0);
+			G_Sound(pm->gent, G_SoundIndex(va("sound/weapons/saber/saber_locking_end%d.mp3", index_end)));
 		}
-		G_Sound(pm->gent, G_SoundIndex(va("sound/weapons/saber/saber_locking_end%d.mp3", index_end)));
 	}
 	return qtrue;
 }

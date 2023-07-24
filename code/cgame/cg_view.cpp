@@ -360,7 +360,9 @@ static void CG_CalcIdealThirdPersonViewTarget()
 	if (uses_view_entity)
 	{
 		const gentity_t* gent = &g_entities[cg.snap->ps.viewEntity];
-		if (gent->client && (gent->client->NPC_class == CLASS_GONK
+
+		if (gent->client && 
+			(gent->client->NPC_class == CLASS_GONK
 			|| gent->client->NPC_class == CLASS_INTERROGATOR
 			|| gent->client->NPC_class == CLASS_SENTRY
 			|| gent->client->NPC_class == CLASS_PROBE
@@ -374,13 +376,14 @@ static void CG_CalcIdealThirdPersonViewTarget()
 			return;
 		}
 
-		if (gent->client->ps.pm_flags & PMF_DUCKED)
+		if (gent->client && gent->client->ps.pm_flags & PMF_DUCKED)
 		{
 			// sort of a nasty hack in order to get this to work. Don't tell Ensiform, or I'll have to kill him. --eez
 			cameraFocusLoc[2] -= CAMERA_CROUCH_NUDGE * 4;
 		}
 
-		if (gent->client->ps.eFlags |= EF_MEDITATING)
+		if (cg.snap
+			&& cg.snap->ps.eFlags & EF_MEDITATING)
 		{
 			cameraFocusLoc[2] -= CAMERA_CROUCH_NUDGE * 4;
 		}
@@ -388,6 +391,7 @@ static void CG_CalcIdealThirdPersonViewTarget()
 
 	// Add in the new viewheight
 	cameraFocusLoc[2] += cg.predicted_player_state.viewheight;
+	
 	if (cg.snap
 		&& cg.snap->ps.eFlags & EF_HELD_BY_SAND_CREATURE)
 	{
@@ -860,7 +864,7 @@ static void CG_OffsetThirdPersonView()
 		}
 	}
 
-	if ((!(cg.renderingThirdPerson)) && (cg.snap->ps.weapon == WP_SABER || cg.snap->ps.weapon == WP_MELEE))
+	if ((cg.snap->ps.weapon == WP_SABER || cg.snap->ps.weapon == WP_MELEE) && !cg.renderingThirdPerson)
 	{
 		// First person saber
 		// FIXME: use something network-friendly
