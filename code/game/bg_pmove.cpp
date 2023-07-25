@@ -15973,7 +15973,7 @@ int G_SaberLockStrength(const gentity_t* gent)
 
 				if (g_SerenityJediEngineMode->integer)
 				{
-					if (pm->ps->communicatingflags & 1 << CF_SABERLOCK_ADVANCE)
+					if (gent->client->ps.communicatingflags & 1 << CF_SABERLOCK_ADVANCE)
 					{
 						strength += gent->client->ps.forcePowerLevel[FP_SABER_OFFENSE] + Q_irand(0, g_spskill->integer) + Q_irand(0, pm->cmd.buttons & BUTTON_ATTACK);
 					}
@@ -16115,7 +16115,7 @@ qboolean PM_SaberLocked()
 				{
 					float current_frame, junk2;
 					int cur_frame, junk;
-					int strength;
+					int strength = G_SaberLockStrength(gent);
 					const animation_t* anim = &level.knownAnimFileSets[gent->client->clientInfo.animFileIndex].
 						animations[pm->ps->torsoAnim];
 
@@ -16129,7 +16129,8 @@ qboolean PM_SaberLocked()
 #ifdef _DEBUG
 					assert(ret); // this would be pretty bad, the below code seems to assume the call succeeds. -gil
 #endif
-					strength = G_SaberLockStrength(gent);
+					
+					
 					if (PM_InSaberLockOld(pm->ps->torsoAnim))
 					{
 						//old locks

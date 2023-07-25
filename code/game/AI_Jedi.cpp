@@ -9158,7 +9158,7 @@ static void jedi_attack()
 			&& NPC->client->ps.saberLockTime < level.time + 5000
 			&& !Q_irand(0, 10))
 		{
-			if (g_saberLockCinematicCamera->integer < 1) // dont do it in training
+			if (g_saberLockCinematicCamera->integer < 1) // dont do it in cam mode
 			{
 				if (g_SerenityJediEngineMode->integer)
 				{

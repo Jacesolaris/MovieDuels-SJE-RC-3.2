@@ -939,9 +939,7 @@ static void CG_OffsetThirdPersonView()
 	}
 	vectoangles(diff, cg.refdefViewAngles);
 
-	// Temp: just move the camera to the side a bit
-	extern vmCvar_t cg_thirdPersonHorzOffset;
-	
+	// Temp: just move the camera to the side a bit	
 	if (cg_thirdPersonHorzOffset.value != 0.0f)
 	{
 		AnglesToAxis(cg.refdefViewAngles, cg.refdef.viewaxis);
