@@ -4784,7 +4784,8 @@ void player_die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, cons
 				//killed a client
 				if (self->client->playerTeam == TEAM_ENEMY
 					|| self->client->playerTeam == TEAM_FREE
-					|| self->NPC && self->NPC->charmedTime > level.time)
+					|| self->NPC && self->NPC->charmedTime > level.time
+					|| (self->client->playerTeam == TEAM_PLAYER && attacker->client->playerTeam == TEAM_ENEMY))
 				{
 					//killed an enemy
 					attacker->client->sess.missionStats.enemiesKilled++;

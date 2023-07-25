@@ -3593,16 +3593,17 @@ qboolean G_CheckClampUcmd(gentity_t* ent, usercmd_t* ucmd)
 	{
 		if (ent->client->ps.communicatingflags & (1 << CF_SABERLOCKING))
 		{
-			cg.overrides.active |= CG_OVERRIDE_3RD_PERSON_RNG | CG_OVERRIDE_FOV | CG_OVERRIDE_3RD_PERSON_CDP;
+			cg.overrides.active |= CG_OVERRIDE_3RD_PERSON_RNG | CG_OVERRIDE_FOV | CG_OVERRIDE_3RD_PERSON_CDP | CG_OVERRIDE_3RD_PERSON_HOF;
 
-			cg.overrides.thirdPersonRange = cg_thirdPersonRange.value - 20;
+			cg.overrides.thirdPersonRange = 60;
 			cg.overrides.thirdPersonCameraDamp = 1;
-			cg.overrides.fov = 45;
+			cg.overrides.thirdPersonHorzOffset = -12.5f;
+			cg.overrides.fov = 31;
 		}
 		else
 		{
-			cg.overrides.active &= ~(CG_OVERRIDE_3RD_PERSON_RNG | CG_OVERRIDE_FOV | CG_OVERRIDE_3RD_PERSON_CDP);
-			cg.overrides.thirdPersonRange = cg.overrides.thirdPersonCameraDamp = 0;
+			cg.overrides.active &= ~(CG_OVERRIDE_3RD_PERSON_RNG | CG_OVERRIDE_FOV | CG_OVERRIDE_3RD_PERSON_CDP | CG_OVERRIDE_3RD_PERSON_HOF);
+			cg.overrides.thirdPersonRange = cg.overrides.thirdPersonCameraDamp = cg.overrides.thirdPersonHorzOffset = 0;
 		}
 	}
 
@@ -5927,7 +5928,7 @@ qboolean G_CheckClampUcmd(gentity_t* ent, usercmd_t* ucmd)
 			// Not in a vehicle.
 			if (ent->s.m_iVehicleNum == 0)
 			{
-				if (!MatrixMode)
+				if (!MatrixMode && !(cg.renderingThirdPerson && cg.predicted_player_state.communicatingflags & (1 << CF_SABERLOCKING) && cg_saberLockCinematicCamera.integer))
 				{
 					cg.overrides.active &= ~(CG_OVERRIDE_3RD_PERSON_RNG | CG_OVERRIDE_3RD_PERSON_POF | CG_OVERRIDE_3RD_PERSON_ANG);
 					cg.overrides.thirdPersonRange = 0;
