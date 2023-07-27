@@ -40,6 +40,8 @@ extern vec3_t playerMins;
 extern vec3_t playerMaxs;
 extern stringID_table_t WPTable[];
 extern cvar_t* g_SerenityJediEngineMode;
+extern cvar_t* g_SaberAttackSpeedMD;
+extern cvar_t* g_RealisticBlockingMode;
 extern cvar_t* com_outcast;
 extern cvar_t* g_playerArmourSync;
 extern cvar_t* com_kotor;
@@ -1087,6 +1089,34 @@ qboolean G_ParseAnimationFile(const int gla_index, const char* skeleton_name, co
 			assert(lerp > -32767 && lerp < 32767);
 			animations[anim_num].frameLerp = lerp;
 			assert(animations[anim_num].frameLerp <= 1);
+
+			if (g_SerenityJediEngineMode->integer == 2)
+			{//Slow down saber moves...
+				if (g_SaberAttackSpeedMD->integer)
+				{
+					if (g_RealisticBlockingMode->integer)
+					{
+						for (int x = 4; x < LS_MOVE_MAX; x++)
+						{
+							if (saberMoveData[x].animToUse + 77 * 4 == anim_num) // SS_TAVION
+							{
+								animations[anim_num].frameLerp *= 1.2;
+								break;
+							}
+							if (saberMoveData[x].animToUse + 77 * 5 == anim_num) // SS_DUAL
+							{
+								animations[anim_num].frameLerp *= 1.1;
+								break;
+							}
+							if (saberMoveData[x].animToUse + 77 * 6 == anim_num) // SS_STAFF
+							{
+								animations[anim_num].frameLerp *= 1.1;
+								break;
+							}
+						}
+					}
+				}
+			}
 		}
 		else
 		{
@@ -1094,6 +1124,34 @@ qboolean G_ParseAnimationFile(const int gla_index, const char* skeleton_name, co
 			assert(lerp > -32767 && lerp < 32767);
 			animations[anim_num].frameLerp = lerp;
 			assert(animations[anim_num].frameLerp >= 1);
+
+			if (g_SerenityJediEngineMode->integer == 2)
+			{//Slow down saber moves...
+				if (g_SaberAttackSpeedMD->integer)
+				{
+					if (g_RealisticBlockingMode->integer)
+					{
+						for (int x = 4; x < LS_MOVE_MAX; x++)
+						{
+							if (saberMoveData[x].animToUse + 77 * 4 == anim_num) // SS_TAVION
+							{
+								animations[anim_num].frameLerp *= 1.2;
+								break;
+							}
+							if (saberMoveData[x].animToUse + 77 * 5 == anim_num) // SS_DUAL
+							{
+								animations[anim_num].frameLerp *= 1.1;
+								break;
+							}
+							if (saberMoveData[x].animToUse + 77 * 6 == anim_num) // SS_STAFF
+							{
+								animations[anim_num].frameLerp *= 1.1;
+								break;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 	COM_EndParseSession();

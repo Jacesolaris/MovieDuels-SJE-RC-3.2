@@ -120,6 +120,7 @@ extern qboolean PM_WindAnim(int anim);
 extern cvar_t* g_SerenityJediEngineMode;
 qboolean PM_StandingAtReadyAnim(int anim);
 extern qboolean PM_InKataAnim(int anim);
+
 // Okay, here lies the much-dreaded Pat-created FSM movement chart...  Heretic II strikes again!
 // Why am I inflicting this on you?  Well, it's better than hardcoded states.
 // Ideally this will be replaced with an external file or more sophisticated move-picker
@@ -3491,8 +3492,8 @@ saberMoveName_t PM_NPC_Force_Leap_Attack()
 	}
 }
 
-#define LUNGE_DISTANCE 128
-qboolean PM_CanLunge(void)
+#define SPECIAL_ATTACK_DISTANCE 128
+qboolean PM_Can_Do_Kill_Lunge(void)
 {
 	trace_t tr;
 	vec3_t flatAng;
@@ -3505,15 +3506,42 @@ qboolean PM_CanLunge(void)
 
 	AngleVectors(flatAng, fwd, 0, 0);
 
-	back[0] = pm->ps->origin[0] + fwd[0] * LUNGE_DISTANCE;
-	back[1] = pm->ps->origin[1] + fwd[1] * LUNGE_DISTANCE;
-	back[2] = pm->ps->origin[2] + fwd[2] * LUNGE_DISTANCE;
+	back[0] = pm->ps->origin[0] + fwd[0] * SPECIAL_ATTACK_DISTANCE;
+	back[1] = pm->ps->origin[1] + fwd[1] * SPECIAL_ATTACK_DISTANCE;
+	back[2] = pm->ps->origin[2] + fwd[2] * SPECIAL_ATTACK_DISTANCE;
 
 	pm->trace(&tr, pm->ps->origin, trmins, trmaxs, back, pm->ps->client_num, MASK_PLAYERSOLID, static_cast<EG2_Collision>(0), 0);
 
 	if (tr.fraction != 1.0 && tr.entity_num >= 0 && tr.entity_num < MAX_CLIENTS)
 	{
-		//We don't have real entity access here so we can't do an in depth check. But if it's a client and it's behind us, I guess that's reason enough to stab backward
+		//We don't have real entity access here so we can't do an in depth check. But if it's a client, I guess that's reason enough to attack
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean PM_Can_Do_Kill_Lunge_back(void)
+{
+	trace_t tr;
+	vec3_t flatAng;
+	vec3_t fwd, back{};
+	vec3_t trmins = { -15, -15, -8 };
+	vec3_t trmaxs = { 15, 15, 8 };
+
+	VectorCopy(pm->ps->viewangles, flatAng);
+	flatAng[PITCH] = 0;
+
+	AngleVectors(flatAng, fwd, 0, 0);
+
+	back[0] = pm->ps->origin[0] - fwd[0] * SPECIAL_ATTACK_DISTANCE;
+	back[1] = pm->ps->origin[1] - fwd[1] * SPECIAL_ATTACK_DISTANCE;
+	back[2] = pm->ps->origin[2] - fwd[2] * SPECIAL_ATTACK_DISTANCE;
+
+	pm->trace(&tr, pm->ps->origin, trmins, trmaxs, back, pm->ps->client_num, MASK_PLAYERSOLID, static_cast<EG2_Collision>(0), 0);
+
+	if (tr.fraction != 1.0 && tr.entity_num >= 0 && (tr.entity_num < MAX_CLIENTS))
+	{ //We don't have real entity access here so we can't do an indepth check. But if it's a client and it's behind us, I guess that's reason enough to stab backward
 		return qtrue;
 	}
 
@@ -4286,6 +4314,7 @@ saberMoveName_t PM_CheckPlayerAttackFromParry(const int curmove)
 saberMoveName_t PM_SaberAttackForMovement(const int forwardmove, const int rightmove, const int curmove)
 {
 	qboolean no_specials = qfalse;
+	saberMoveName_t newmove = LS_NONE;
 
 	if (pm->ps->client_num < MAX_CLIENTS
 		&& PM_InSecondaryStyle())
@@ -4805,15 +4834,13 @@ saberMoveName_t PM_SaberAttackForMovement(const int forwardmove, const int right
 					return LS_NONE;
 				}
 			}
-			saberMoveName_t newmove;
+
 			if (pm->ps->client_num && !PM_ControlledByPlayer() && Q_irand(0, 3))
-			{
-				//use NPC random
+			{//use NPC random
 				newmove = PM_NPCSaberAttackFromQuad(saberMoveData[curmove].endQuad);
 			}
 			else
-			{
-				//player uses chain-attack
+			{//player uses chain-attack
 				newmove = saberMoveData[curmove].chain_attack;
 			}
 			if (PM_SaberKataDone(curmove, newmove))
@@ -4834,10 +4861,8 @@ saberMoveName_t PM_SaberAttackForMovement(const int forwardmove, const int right
 					return LS_NONE;
 				}
 			}
-			saberMoveName_t newmove;
 			if (pm->ps->client_num && !PM_ControlledByPlayer() && Q_irand(0, 3))
-			{
-				//use NPC random
+			{//use NPC random
 				newmove = PM_NPCSaberAttackFromQuad(saberMoveData[curmove].endQuad);
 			}
 			else
@@ -4929,7 +4954,7 @@ saberMoveName_t PM_SaberAttackForMovement(const int forwardmove, const int right
 			return LS_A_T2B; //decided we don't like random attacks when idle, use an overhead instead.
 		}
 	}
-	return LS_NONE;
+	return newmove;
 }
 
 extern int pm_returnfor_quad(int quad);
@@ -5666,9 +5691,16 @@ void PM_SaberStartTransAnim(const int saber_anim_level, const int anim, float* a
 					{
 						if (g_RealisticBlockingMode->integer)
 						{
-							constexpr float realisticanimscale = 1.0f;
-							//constexpr float realisticanimscale = 0.95f;
-							*anim_speed *= realisticanimscale;
+							if (gent->client->ps.saberFatigueChainCount >= MISHAPLEVEL_MAXINACCURACY)
+							{//Slow down saber moves...
+								constexpr float fatiguedanimscale = 0.97f;
+								*anim_speed *= fatiguedanimscale;
+							}
+							else
+							{
+								constexpr float realisticanimscale = 0.99f;
+								*anim_speed *= realisticanimscale;
+							}
 						}
 						else
 						{
@@ -5830,7 +5862,7 @@ void PM_SetAnimFinal(int* torso_anim, int* legs_anim,
 			{
 				gi.Printf(S_COLOR_RED"PM_SetAnimFinal: Anim %s does not exist in this model (%s)!\n", anim_table[anim].name, gent->NPC_type);
 			}
-		}
+}
 		LastAnimWarningNum = anim;
 #endif
 		return;
@@ -5979,7 +6011,7 @@ void PM_SetAnimFinal(int* torso_anim, int* legs_anim,
 		{
 			anim_speed = max_playback_speed;
 		}
-		}
+	}
 
 	// GET VALUES FOR EXISTING BODY ANIMATION
 	//==========================================

@@ -177,6 +177,8 @@ extern void ItemUse_Jetpack(const gentity_t* ent);
 extern void Jetpack_Off(const gentity_t* ent);
 static void PM_SetWaterLevelAtPoint(vec3_t org, int* waterlevel, int* watertype);
 extern qboolean Bokatan_Dual_Clone_Pistol(const gentity_t* self);
+extern cvar_t* g_SaberAttackSpeedMD;
+extern cvar_t* g_RealisticBlockingMode;
 
 constexpr auto FLY_NONE = 0;
 constexpr auto FLY_NORMAL = 1;
@@ -15051,28 +15053,32 @@ void PM_Use()
 
 extern saberMoveName_t PM_AttackForEnemyPos(qboolean allow_fb, qboolean allow_stab_down);
 extern saberMoveName_t PM_NPC_Force_Leap_Attack(void);
-extern qboolean PM_CanLunge(void);
+extern qboolean PM_Can_Do_Kill_Lunge(void);
+extern qboolean PM_Can_Do_Kill_Lunge_back(void);
 int Next_Kill_Attack_Move_Check[MAX_CLIENTS]; // Next special move check.
 saberMoveName_t PM_DoAI_Fake(const int curmove);
 
 saberMoveName_t PM_NPCSaberAttackFromQuad(const int quad)
 {
 	saberMoveName_t auto_move = LS_NONE;
+	saberMoveName_t newmove = LS_NONE;
 
-	if (pm->gent && (pm->gent->NPC && pm->gent->NPC->rank != RANK_ENSIGN && pm->gent->NPC->rank != RANK_CIVILIAN
-		|| pm->gent->client && (pm->gent->client->NPC_class == CLASS_TAVION || pm->gent->client->NPC_class ==
-			CLASS_YODA || pm->gent->client->NPC_class == CLASS_GALEN || pm->gent->client->NPC_class ==
-			CLASS_ALORA)))
+	if (pm->gent &&
+		(pm->gent->NPC && pm->gent->NPC->rank != RANK_ENSIGN && pm->gent->NPC->rank != RANK_CIVILIAN
+			|| pm->gent->client &&
+			(pm->gent->client->NPC_class == CLASS_TAVION || pm->gent->client->NPC_class == CLASS_YODA || pm->gent->client->NPC_class == CLASS_GALEN || pm->gent->client->NPC_class == CLASS_ALORA)))
 	{
 		auto_move = PM_AttackForEnemyPos(qtrue, qtrue);
 	}
+
 	if (auto_move != LS_NONE && PM_SaberInSpecial(auto_move))
 	{
 		//if have opportunity to do a special attack, do one
 		return auto_move;
 	}
+
 	//pick another one
-	saberMoveName_t newmove = LS_NONE;
+
 	switch (quad)
 	{
 	case Q_T: //blocked top
@@ -15170,39 +15176,54 @@ saberMoveName_t PM_NPCSaberAttackFromQuad(const int quad)
 		}
 		break;
 	case Q_B:
-		if (pm->gent
-			&& pm->gent->NPC
-			&& pm->gent->NPC->rank >= RANK_LT_JG)
-		{
-			//fencers and above can do bottom-up attack
-			if (Q_irand(0, pm->gent->NPC->rank) >= RANK_LT_JG)
-			{
-				if (PM_CheckLungeAttackMove())
-				{
-					//but not overly likely
-					newmove = PM_SaberLungeAttackMove(qtrue);
-				}
-			}
-		}
+		newmove = PM_SaberLungeAttackMove(qtrue);
 		break;
 	default:
 		break;
 	}
 
-	if (g_SerenityJediEngineMode->integer == 2 &&
+	if (g_SerenityJediEngineMode->integer == 2 && g_SaberAttackSpeedMD->integer && g_RealisticBlockingMode->integer && //Only proper jedi players get this
 		g_spskill->integer > 1 &&
 		G_EnoughPowerForSpecialMove(pm->ps->forcePower, SABER_ALT_ATTACK_POWER, qtrue) &&
 		!pm->ps->forcePowersActive && !in_camera)
 	{
 		if (pm->ps->client_num >= MAX_CLIENTS && !PM_ControlledByPlayer())
-		{// JaceSolaris
+		{// Some special bot stuff.
 			if (Next_Kill_Attack_Move_Check[pm->ps->client_num] <= level.time && g_attackskill->integer >= 0)
 			{
-				int check_val = 0;
+				int check_val = 0; // Times 500 for next check interval.
 
-				if (PM_CanLunge())
-				{
+				if (PM_Can_Do_Kill_Lunge_back())
+				{ //BACKSTAB
 					if ((pm->ps->pm_flags & PMF_DUCKED) || pm->cmd.upmove < 0)
+					{
+						newmove = LS_A_BACK_CR;
+					}
+					else
+					{
+						int choice = rand() % 3;
+
+						if (choice == 1)
+						{
+							newmove = LS_A_BACK;
+						}
+						else if (choice == 2)
+						{
+							newmove = PM_SaberBackflipAttackMove();
+						}
+						else if (choice == 3)
+						{
+							newmove = LS_A_BACKFLIP_ATK;
+						}
+						else
+						{
+							newmove = LS_A_BACKSTAB;
+						}
+					}
+				}
+				else if (PM_Can_Do_Kill_Lunge())
+				{
+					if (pm->ps->pm_flags & PMF_DUCKED)
 					{
 						newmove = PM_SaberLungeAttackMove(qtrue);
 
@@ -15213,69 +15234,112 @@ saberMoveName_t PM_NPCSaberAttackFromQuad(const int quad)
 					}
 					else
 					{
-						int choice = rand() % 3;
+						const int choice = rand() % 9;
 
-						if (choice == 1)
+						switch (choice)
 						{
+						case 0:
 							newmove = PM_NPC_Force_Leap_Attack();
 
 							if (d_attackinfo->integer)
 							{
 								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 1\n");
 							}
-						}
-						else if (choice == 2)
-						{
+							break;
+						case 1:
 							newmove = PM_DoAI_Fake(qtrue);
 
 							if (d_attackinfo->integer)
 							{
 								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 2\n");
 							}
-						}
-						else if (choice == 3)
-						{
-							switch (pm->ps->saber_anim_level)
-							{
-							case SS_FAST:
-								newmove = LS_A1_SPECIAL;
-								break;
-							case SS_MEDIUM:
-								newmove = LS_A2_SPECIAL;
-								break;
-							case SS_STRONG:
-								newmove = LS_A3_SPECIAL;
-								break;
-							case SS_DESANN:
-								newmove = LS_A3_SPECIAL;
-								break;
-							case SS_TAVION:
-								newmove = LS_A1_SPECIAL;
-								break;
-							case SS_DUAL:
-								newmove = LS_DUAL_SPIN_PROTECT;
-								break;
-							case SS_STAFF:
-								newmove = LS_STAFF_SOULCAL;
-								break;
-							default:;
-								newmove = LS_A2_SPECIAL;
-								break;
-							}
+							break;
+						case 2:
+							newmove = LS_A1_SPECIAL;
 
 							if (d_attackinfo->integer)
 							{
 								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 3\n");
 							}
-						}
-						else
-						{
-							newmove = PM_SaberFlipOverAttackMove();
+							break;
+						case 3:
+							newmove = LS_A2_SPECIAL;
 
 							if (d_attackinfo->integer)
 							{
 								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 4\n");
 							}
+							break;
+						case 4:
+							newmove = LS_A3_SPECIAL;
+
+							if (d_attackinfo->integer)
+							{
+								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 5\n");
+							}
+							break;
+						case 5:
+							newmove = LS_JUMPATTACK_STAFF_RIGHT;
+
+							if (d_attackinfo->integer)
+							{
+								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 6\n");
+							}
+							break;
+						case 6:
+							newmove = LS_JUMPATTACK_STAFF_LEFT;
+
+							if (d_attackinfo->integer)
+							{
+								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 7\n");
+							}
+							break;
+						case 7:
+							if (pm->ps->saber_anim_level == SS_DUAL)
+							{
+								newmove = LS_DUAL_SPIN_PROTECT;
+							}
+							else if (pm->ps->saber_anim_level == SS_STAFF)
+							{
+								newmove = LS_STAFF_SOULCAL;
+							}
+							else
+							{
+								newmove = LS_A_JUMP_T__B_;
+							}
+
+							if (d_attackinfo->integer)
+							{
+								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 8\n");
+							}
+							break;
+						case 8:
+							if (pm->ps->saber_anim_level == SS_DUAL)
+							{
+								newmove = LS_JUMPATTACK_DUAL;
+							}
+							else if (pm->ps->saber_anim_level == SS_STAFF)
+							{
+								newmove = LS_JUMPATTACK_STAFF_RIGHT;
+							}
+							else
+							{
+								newmove = LS_SPINATTACK;
+							}
+
+							if (d_attackinfo->integer)
+							{
+								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 9\n");
+							}
+							break;
+						default:
+							newmove = PM_SaberFlipOverAttackMove();
+
+							if (d_attackinfo->integer)
+							{
+								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 10\n");
+							}
+							break;
 						}
 					}
 					pm->ps->weaponstate = WEAPON_FIRING;
@@ -15289,7 +15353,114 @@ saberMoveName_t PM_NPCSaberAttackFromQuad(const int quad)
 					check_val = 1;
 				}
 
-				Next_Kill_Attack_Move_Check[pm->ps->client_num] = level.time + (40000 / check_val); // 40 secs / g_attackskill->integer
+				Next_Kill_Attack_Move_Check[pm->ps->client_num] = level.time + (40000 / check_val); // 20 secs / g_attackskill->integer
+			}
+		}
+	}
+	else
+	{
+		if (g_SerenityJediEngineMode->integer > 1 &&
+			g_spskill->integer > 1 &&
+			G_EnoughPowerForSpecialMove(pm->ps->forcePower, SABER_ALT_ATTACK_POWER, qtrue) &&
+			!pm->ps->forcePowersActive && !in_camera)
+		{
+			if (pm->ps->client_num >= MAX_CLIENTS && !PM_ControlledByPlayer())
+			{// JaceSolaris
+				if (Next_Kill_Attack_Move_Check[pm->ps->client_num] <= level.time && g_attackskill->integer >= 0)
+				{
+					int check_val = 0;
+
+					if (PM_Can_Do_Kill_Lunge())
+					{
+						if ((pm->ps->pm_flags & PMF_DUCKED) || pm->cmd.upmove < 0)
+						{
+							newmove = PM_SaberLungeAttackMove(qtrue);
+
+							if (d_attackinfo->integer)
+							{
+								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 0\n");
+							}
+						}
+						else
+						{
+							int choice = rand() % 3;
+
+							if (choice == 1)
+							{
+								newmove = PM_NPC_Force_Leap_Attack();
+
+								if (d_attackinfo->integer)
+								{
+									gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 1\n");
+								}
+							}
+							else if (choice == 2)
+							{
+								newmove = PM_DoAI_Fake(qtrue);
+
+								if (d_attackinfo->integer)
+								{
+									gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 2\n");
+								}
+							}
+							else if (choice == 3)
+							{
+								switch (pm->ps->saber_anim_level)
+								{
+								case SS_FAST:
+									newmove = LS_A1_SPECIAL;
+									break;
+								case SS_MEDIUM:
+									newmove = LS_A2_SPECIAL;
+									break;
+								case SS_STRONG:
+									newmove = LS_A3_SPECIAL;
+									break;
+								case SS_DESANN:
+									newmove = LS_A3_SPECIAL;
+									break;
+								case SS_TAVION:
+									newmove = LS_A1_SPECIAL;
+									break;
+								case SS_DUAL:
+									newmove = LS_DUAL_SPIN_PROTECT;
+									break;
+								case SS_STAFF:
+									newmove = LS_STAFF_SOULCAL;
+									break;
+								default:;
+									newmove = LS_A2_SPECIAL;
+									break;
+								}
+
+								if (d_attackinfo->integer)
+								{
+									gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 3\n");
+								}
+							}
+							else
+							{
+								newmove = PM_SaberFlipOverAttackMove();
+
+								if (d_attackinfo->integer)
+								{
+									gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 4\n");
+								}
+							}
+						}
+						pm->ps->weaponstate = WEAPON_FIRING;
+						WP_ForcePowerDrain(pm->gent, FP_SABER_OFFENSE, SABER_ALT_ATTACK_POWER_FB);
+					}
+
+					check_val = g_attackskill->integer;
+
+					if (check_val <= 0)
+					{
+						check_val = 1;
+					}
+
+					Next_Kill_Attack_Move_Check[pm->ps->client_num] = level.time + (40000 / check_val); // 40 secs / g_attackskill->integer
+				}
 			}
 		}
 	}
@@ -15965,11 +16136,10 @@ int G_SaberLockStrength(const gentity_t* gent)
 		else
 		{
 			pm->ps->saberLockHitCheckTime = level.time + 25;//so we don't push more than once per server frame
-			
+
 			if (gent->client->ps.saberLockHitIncrementTime < level.time)
 			{//have moved to next frame since last saberlock attack button press
 				gent->client->ps.saberLockHitIncrementTime = level.time + 50;//so we don't register an attack key press more than once per server frame
-
 
 				if (g_SerenityJediEngineMode->integer)
 				{
@@ -16129,8 +16299,7 @@ qboolean PM_SaberLocked()
 #ifdef _DEBUG
 					assert(ret); // this would be pretty bad, the below code seems to assume the call succeeds. -gil
 #endif
-					
-					
+
 					if (PM_InSaberLockOld(pm->ps->torsoAnim))
 					{
 						//old locks
@@ -20069,8 +20238,7 @@ void PM_WeaponLightsaber()
 			{
 				//from a parry or reflection, can go directly into an attack
 				if (pm->ps->client_num >= MAX_CLIENTS && !PM_ControlledByPlayer())
-				{
-					//NPCs
+				{//NPCs
 					newmove = PM_NPCSaberAttackFromQuad(saberMoveData[curmove].endQuad);
 				}
 				else
@@ -20121,8 +20289,7 @@ void PM_WeaponLightsaber()
 							|| pm->ps->saber_anim_level == SS_FAST && pm->gent
 							&& pm->gent->NPC && pm->gent->NPC->rank >= RANK_LT_JG && Q_irand(0, 1)))
 						//minor change to make fast-attack users use the special attacks more
-					{
-						//NPCs use more randomized attacks the more skilled they are
+					{//NPCs use more randomized attacks the more skilled they are
 						newmove = PM_NPCSaberAttackFromQuad(saberMoveData[curmove].endQuad);
 					}
 					else
