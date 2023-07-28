@@ -34948,8 +34948,9 @@ void ForceDrainDamage(gentity_t* self, gentity_t* trace_ent, vec3_t dir, vec3_t 
 				{
 					//do damage, too
 					G_Damage(trace_ent, self, self, dir, impact_point, dmg, dflags, MOD_FORCE_DRAIN);
+					
 					if (g_SerenityJediEngineMode->integer)
-					{
+					{// this makes him do the pain anim
 						Jedi_DrainReaction(trace_ent);
 					}
 				}

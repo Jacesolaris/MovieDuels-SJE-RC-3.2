@@ -642,6 +642,7 @@ Check for lava / slime contents and drowning
 =============
 */
 extern qboolean PM_InAmputateMove(int anim);
+extern qboolean PM_InDrainPainMove(int anim);
 extern void WP_ForcePowerStart(gentity_t* self, forcePowers_t force_power, int override_amt);
 
 void P_WorldEffects(gentity_t* ent)
@@ -2075,6 +2076,7 @@ void ClientTimerActions(gentity_t* ent, const int msec)
 
 			if (g_SerenityJediEngineMode->integer == 2
 				&& (!PM_InAmputateMove(ent->client->ps.legsAnim)
+					&& !PM_InDrainPainMove(ent->client->ps.torsoAnim)
 					&& !ent->client->poisonTime
 					&& !ent->client->stunTime
 					&& !ent->client->AmputateTime

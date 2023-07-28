@@ -1054,6 +1054,19 @@ qboolean PM_InAmputateMove(const int anim)
 	return qfalse;
 }
 
+qboolean PM_InDrainPainMove(const int anim)
+{
+	switch (anim)
+	{
+	case BOTH_FORCE_DRAIN_GRABBED:
+	case BOTH_SONICPAIN_HOLD:
+	case BOTH_WIND:
+		return qtrue;
+	default:;
+	}
+	return qfalse;
+}
+
 qboolean PM_InLedgeMove(const int anim)
 {
 	switch (anim)
