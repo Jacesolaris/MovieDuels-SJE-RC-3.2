@@ -4816,28 +4816,27 @@ void player_die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, cons
 
 			// Change this to be how you need it
 
-			if (attacker->client && !attacker->s.number)
-			{
-				if (self->client)
-				{
-					//killed a client
-					if (self->client->playerTeam == TEAM_ENEMY
-						|| self->client->playerTeam == TEAM_FREE
-						|| self->NPC && self->NPC->charmedTime > level.time
-						|| (self->client->playerTeam == TEAM_PLAYER && attacker->client->playerTeam == TEAM_ENEMY))
-					{
-						//killed an enemy
-						attacker->client->sess.missionStats.enemiesKilled++;
-					}
-				}
-				if (attacker != self)
-				{
-					G_TrackWeaponUsage(attacker, inflictor, 30, means_of_death);
-				}
-			}
-
 			if (self->client->ps.stats[STAT_HEALTH] <= 3)
 			{
+				if (attacker->client && !attacker->s.number)
+				{
+					if (self->client)
+					{
+						//killed a client
+						if (self->client->playerTeam == TEAM_ENEMY
+							|| self->client->playerTeam == TEAM_FREE
+							|| self->NPC && self->NPC->charmedTime > level.time
+							|| (self->client->playerTeam == TEAM_PLAYER && attacker->client->playerTeam == TEAM_ENEMY))
+						{
+							//killed an enemy
+							attacker->client->sess.missionStats.enemiesKilled++;
+						}
+					}
+					if (attacker != self)
+					{
+						G_TrackWeaponUsage(attacker, inflictor, 30, means_of_death);
+					}
+				}
 				G_CheckAlmostVictoryScript(attacker);
 			}
 		}
