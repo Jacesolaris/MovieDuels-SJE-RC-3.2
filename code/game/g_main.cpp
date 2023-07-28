@@ -319,6 +319,7 @@ cvar_t* g_Advancedaitalk;
 cvar_t* com_kotor;
 cvar_t* g_attackskill;
 cvar_t* g_saberLockCinematicCamera;
+cvar_t* g_ffamode;
 
 extern char* G_GetLocationForEnt(const gentity_t* ent);
 extern void CP_FindCombatPointWaypoints();
@@ -955,6 +956,8 @@ void G_InitCvars()
 	g_attackskill = gi.cvar("g_attackskill", "3", CVAR_ARCHIVE);
 
 	g_saberLockCinematicCamera = gi.cvar("g_saberLockCinematicCamera", "0", CVAR_ARCHIVE);
+
+	g_ffamode = gi.cvar("g_ffamode", "0", CVAR_ARCHIVE);
 }
 
 /*

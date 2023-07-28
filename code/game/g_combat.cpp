@@ -122,6 +122,7 @@ static qboolean G_Dismemberable(const gentity_t* self, int hit_loc);
 extern gitem_t* FindItemForAmmo(ammo_t ammo);
 extern void WP_RemoveSaber(gentity_t* ent, int saber_num);
 extern cvar_t* g_SerenityJediEngineMode;
+extern cvar_t* g_ffamode;
 extern cvar_t* g_Bloodmist;
 extern void Jetpack_Off(const gentity_t* ent);
 extern void Boba_FlyStop(gentity_t* self);
@@ -4806,30 +4807,64 @@ void player_die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, cons
 
 	if (attacker)
 	{
-		if (self->client->ps.stats[STAT_HEALTH] <= 3)
+		if (g_ffamode->integer)
 		{
-			G_CheckAlmostVictoryScript(attacker);
-		}
-		if (attacker->client && !attacker->s.number)
-		{
-			if (self->client)
+			// MESSAGE TO MIKE - We need some sort of CVAR to be activated when playing this FFA Mode
+			// If we dont have a cvar it will effect other SP game stuff possibly ???
+			// Can you activate g_ffamode in scripts somehow and then put everything in the cvar bracket to avoid any
+			// conflictions
+
+			// Change this to be how you need it
+
+			if (attacker->client && !attacker->s.number)
 			{
-				//killed a client
-				if (self->client->playerTeam == TEAM_ENEMY
-					|| self->client->playerTeam == TEAM_FREE
-					|| self->NPC && self->NPC->charmedTime > level.time
-					|| (self->client->playerTeam == TEAM_PLAYER && attacker->client->playerTeam == TEAM_ENEMY))
+				if (self->client)
 				{
-					//killed an enemy
-					attacker->client->sess.missionStats.enemiesKilled++;
+					//killed a client
+					if (self->client->playerTeam == TEAM_ENEMY
+						|| self->client->playerTeam == TEAM_FREE
+						|| self->NPC && self->NPC->charmedTime > level.time
+						|| (self->client->playerTeam == TEAM_PLAYER && attacker->client->playerTeam == TEAM_ENEMY))
+					{
+						//killed an enemy
+						attacker->client->sess.missionStats.enemiesKilled++;
+					}
+				}
+				if (attacker != self)
+				{
+					G_TrackWeaponUsage(attacker, inflictor, 30, means_of_death);
 				}
 			}
-			if (attacker != self)
+
+			if (self->client->ps.stats[STAT_HEALTH] <= 3)
 			{
-				G_TrackWeaponUsage(attacker, inflictor, 30, means_of_death);
+				G_CheckAlmostVictoryScript(attacker);
 			}
 		}
-		G_CheckVictoryScript(attacker);
+		else
+		{
+
+			if (attacker->client && !attacker->s.number)
+			{
+				if (self->client)
+				{
+					//killed a client
+					if (self->client->playerTeam == TEAM_ENEMY
+						|| self->client->playerTeam == TEAM_FREE
+						|| self->NPC && self->NPC->charmedTime > level.time
+						|| (self->client->playerTeam == TEAM_PLAYER && attacker->client->playerTeam == TEAM_ENEMY))
+					{
+						//killed an enemy
+						attacker->client->sess.missionStats.enemiesKilled++;
+					}
+				}
+				if (attacker != self)
+				{
+					G_TrackWeaponUsage(attacker, inflictor, 30, means_of_death);
+				}
+			}
+			G_CheckVictoryScript(attacker);
+		}
 
 		//player killing a jedi with a lightsaber spawns a matrix-effect entity
 		if (d_slowmodeath->integer)
