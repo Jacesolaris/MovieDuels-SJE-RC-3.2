@@ -654,6 +654,9 @@ using setType_t = enum //# setType_e
 
 	SET_MORELIGHT_PLAYER,
 
+	SET_UNDYINGPLAYERVICTORYSCRIPT,
+		//## %s="NULL" !!"W:\game\base\scripts\!!#*.txt" # Script to run when killed someone
+
 	SET_
 };
 

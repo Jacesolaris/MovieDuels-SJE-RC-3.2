@@ -59,6 +59,8 @@ using bSet_t = enum //# bSet_e
 	//# script to run when player kills a teammate
 	BSET_MINDTRICK,
 	//# script to run when player does a mind trick on this NPC
+	UNDYINGPLAYERVICTORY,
+	//# script to run when you kill someone
 
 	NUM_BSETS
 };

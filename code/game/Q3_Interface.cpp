@@ -252,6 +252,7 @@ stringID_table_t BSETTable[] =
 	ENUM2STRING(BSET_STUCK), //# script to run when blocked by a wall
 	ENUM2STRING(BSET_FFIRE), //# script to run when player shoots their own teammates
 	ENUM2STRING(BSET_FFDEATH), //# script to run when player kills a teammate
+	ENUM2STRING(UNDYINGPLAYERVICTORY), //# script to run when you kill someone
 	stringIDExpand("", BSET_INVALID),
 	{"", -1}
 };
@@ -688,6 +689,8 @@ stringID_table_t setTable[] =
 	ENUM2STRING(SET_ENDLESS_BP),
 
 	ENUM2STRING(SET_MORELIGHT_PLAYER),
+
+	ENUM2STRING(SET_UNDYINGPLAYERVICTORYSCRIPT),
 
 	{"", SET_}
 };
@@ -4484,6 +4487,9 @@ static qboolean Q3_SetBehaviorSet(const int entID, const int toSet, const char* 
 		break;
 	case SET_MINDTRICKSCRIPT:
 		bSet = BSET_MINDTRICK;
+		break;
+	case SET_UNDYINGPLAYERVICTORYSCRIPT:
+		bSet = UNDYINGPLAYERVICTORY;
 		break;
 	default:;
 	}
@@ -9043,6 +9049,7 @@ void CQuake3GameInterface::Set(int taskID, int entID, const char* type_name, con
 	case SET_FFIRESCRIPT:
 	case SET_FFDEATHSCRIPT:
 	case SET_MINDTRICKSCRIPT:
+	case SET_UNDYINGPLAYERVICTORYSCRIPT:
 		if (!Q3_SetBehaviorSet(entID, toSet, data))
 			DebugPrint(WL_ERROR, "SetBehaviorSet: Invalid bSet %s\n", type_name);
 		break;
@@ -11470,6 +11477,10 @@ int CQuake3GameInterface::GetString(const int entID, const char* name, char** va
 		DebugPrint(WL_WARNING, "GetString: SET_CENTERTEXT not implemented\n");
 		return false;
 
+	case SET_UNDYINGPLAYERVICTORYSCRIPT: //## %s="NULL" !!"W:\game\base\scripts\!!#*.txt" # Script to run when killed someone
+		*value = ent->behaviorSet[UNDYINGPLAYERVICTORY];
+		break;
+
 	default:
 		if (VariableDeclared(name) != VTYPE_STRING)
 			return false;
@@ -11936,6 +11947,7 @@ void CQuake3GameInterface::PrecacheFromSet(const char* setname, const char* file
 	case SET_FFDEATHSCRIPT:
 	case SET_MINDTRICKSCRIPT:
 	case SET_CINEMATIC_SKIPSCRIPT:
+	case SET_UNDYINGPLAYERVICTORYSCRIPT:
 		PrecacheScript(filename);
 		break;
 

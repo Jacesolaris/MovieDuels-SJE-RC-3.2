@@ -392,6 +392,8 @@ field_t fields[] =
 	{"redcrosshair", 0, F_IGNORE}, //for red crosshairs on breakables
 	{"nodelay", 0, F_IGNORE}, //for Reborn & Cultist NPCs
 
+	{"player_victoryscript", FOFS(behaviorSet[UNDYINGPLAYERVICTORY]), F_LSTRING }, //name of script to run
+
 	{nullptr}
 };
 

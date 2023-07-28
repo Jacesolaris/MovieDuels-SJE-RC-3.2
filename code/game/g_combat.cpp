@@ -555,12 +555,41 @@ void G_CheckVictoryScript(gentity_t* self)
 		{
 			//sometimes have the group commander speak instead
 			self->NPC->group->commander->NPC->greetingDebounceTime = level.time + Q_irand(2000, 5000);
-			//G_AddVoiceEvent( self->NPC->group->commander, Q_irand(EV_VICTORY1, EV_VICTORY3), 2000 );
 		}
 		else if (self->NPC)
 		{
 			self->NPC->greetingDebounceTime = level.time + Q_irand(2000, 5000);
-			//G_AddVoiceEvent( self, Q_irand(EV_VICTORY1, EV_VICTORY3), 2000 );
+		}
+	}
+}
+
+void G_CheckAlmostVictoryScript(gentity_t* self)
+{
+	if (!G_ActivateBehavior(self, UNDYINGPLAYERVICTORY))
+	{
+		if (self->NPC && self->s.weapon == WP_SABER)
+		{
+			//Jedi taunt from within their AI
+			self->NPC->blockedSpeechDebounceTime = 0; //get them ready to taunt
+			return;
+		}
+		if (self->client && self->client->NPC_class == CLASS_GALAKMECH)
+		{
+			self->wait = 1;
+			TIMER_Set(self, "gloatTime", Q_irand(5000, 8000));
+			self->NPC->blockedSpeechDebounceTime = 0; //get him ready to taunt
+			return;
+		}
+		//FIXME: any way to not say this *right away*?  Wait for victim's death anim/scream to finish?
+		if (self->NPC && self->NPC->group && self->NPC->group->commander && self->NPC->group->commander->NPC && self->
+			NPC->group->commander->NPC->rank > self->NPC->rank && !Q_irand(0, 2))
+		{
+			//sometimes have the group commander speak instead
+			self->NPC->group->commander->NPC->greetingDebounceTime = level.time + Q_irand(2000, 5000);
+		}
+		else if (self->NPC)
+		{
+			self->NPC->greetingDebounceTime = level.time + Q_irand(2000, 5000);
 		}
 	}
 }
@@ -4777,6 +4806,10 @@ void player_die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, cons
 
 	if (attacker)
 	{
+		if (self->client->ps.stats[STAT_HEALTH] <= 3)
+		{
+			G_CheckAlmostVictoryScript(attacker);
+		}
 		if (attacker->client && !attacker->s.number)
 		{
 			if (self->client)
@@ -4797,6 +4830,7 @@ void player_die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, cons
 			}
 		}
 		G_CheckVictoryScript(attacker);
+
 		//player killing a jedi with a lightsaber spawns a matrix-effect entity
 		if (d_slowmodeath->integer)
 		{
