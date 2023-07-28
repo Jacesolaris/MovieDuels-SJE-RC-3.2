@@ -1237,6 +1237,7 @@ void Com_Init(char* commandLine)
 		Cvar_Set("com_kotor", "0");
 		Cvar_Set("cg_trueguns", "0");
 		Cvar_Set("d_npcfreeze", "0");
+		Cvar_Set("g_ffamode", "0");
 
 #endif
 
