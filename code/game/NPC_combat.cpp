@@ -39,6 +39,7 @@ extern qboolean G_ValidEnemy(const gentity_t* self, const gentity_t* enemy);
 extern qboolean PM_ReloadAnim(int anim);
 extern qboolean PM_WeponRestAnim(int anim);
 extern cvar_t* com_kotor;
+extern cvar_t* g_ffamode;
 
 void ChangeWeapon(const gentity_t* ent, int new_weapon);
 
@@ -568,9 +569,12 @@ void G_SetEnemy(gentity_t* self, gentity_t* enemy)
 		}
 	}
 
-	if ((self->client && self->client->playerTeam != TEAM_FREE) && (self->client && self->client->playerTeam != TEAM_SOLO))
+	if (g_ffamode->integer)
 	{
-		return;
+		/*if ((self->client && self->client->playerTeam != TEAM_FREE) && (self->client && self->client->playerTeam != TEAM_SOLO))
+		{
+			return; // so if your in ffa mode and not on team solo / free they are not your enemy ????
+		}*/
 	}
 
 	if (self->NPC && self->client && self->client->ps.weapon == WP_SABER)
