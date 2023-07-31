@@ -570,7 +570,13 @@ void G_SetEnemy(gentity_t* self, gentity_t* enemy)
 	}
 
 	if (g_ffamode->integer)
-	{
+	{       // MESSAGE TO MIKE - We need some sort of CVAR to be activated when playing this FFA Mode
+			// If we dont have a cvar it will effect other SP game stuff possibly ???
+			// Can you activate g_ffamode in scripts somehow and then put everything in the cvar bracket to avoid any
+			// conflictions
+
+			// Change this to be how you need it
+
 		/*if ((self->client && self->client->playerTeam != TEAM_FREE) && (self->client && self->client->playerTeam != TEAM_SOLO))
 		{
 			return; // so if your in ffa mode and not on team solo / free they are not your enemy ????

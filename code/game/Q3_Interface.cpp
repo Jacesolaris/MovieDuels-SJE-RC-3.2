@@ -692,6 +692,8 @@ stringID_table_t setTable[] =
 
 	ENUM2STRING(SET_UNDYINGPLAYERVICTORYSCRIPT),
 
+	ENUM2STRING(SET_FFAMODE),
+
 	{"", SET_}
 };
 
@@ -7208,6 +7210,30 @@ static void Q3_setVaderBreath(const int entID, const qboolean usable)
 	}
 }
 
+static void Q3_setFFAMode(const int entID, const qboolean usable)
+{
+	const gentity_t* ent = &g_entities[entID];
+
+	// MESSAGE TO MIKE - We need some sort of CVAR to be activated when playing this FFA Mode
+	//  If we dont have a cvar it will effect other SP game stuff possibly ???
+	// Can you activate g_ffamode in scripts somehow and then put everything in the cvar bracket to avoid any conflictions
+
+	if (!ent)
+	{
+		Quake3Game()->DebugPrint(IGameInterface::WL_WARNING, "g_ffamode: invalid entID %d\n", entID);
+		return;
+	}
+
+	if (usable)
+	{
+		gi.cvar_set("g_ffamode", "1");
+	}
+	else
+	{
+		gi.cvar_set("g_ffamode", "0");
+	}
+}
+
 static void Q3_setKotorMode(const int entID, const qboolean usable)
 {
 	const gentity_t* ent = &g_entities[entID];
@@ -10187,6 +10213,17 @@ void CQuake3GameInterface::Set(int taskID, int entID, const char* type_name, con
 			Q3_SetMoreLightnpc(entID, qtrue);
 		else
 			Q3_SetMoreLightnpc(entID, qfalse);
+		break;
+
+	case SET_FFAMODE:
+		if (!Q_stricmp("true", data))
+		{
+			Q3_setFFAMode(entID, qtrue);
+		}
+		else
+		{
+			Q3_setFFAMode(entID, qfalse);
+		}
 		break;
 
 	default:
