@@ -568,6 +568,11 @@ void G_SetEnemy(gentity_t* self, gentity_t* enemy)
 		}
 	}
 
+	if ((self->client && self->client->playerTeam != TEAM_FREE) && (self->client && self->client->playerTeam != TEAM_SOLO))
+	{
+		return;
+	}
+
 	if (self->NPC && self->client && self->client->ps.weapon == WP_SABER)
 	{
 		//when get new enemy, set a base aggression based on what that enemy is using, how far they are, etc.

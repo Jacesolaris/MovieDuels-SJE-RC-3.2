@@ -881,6 +881,7 @@ public:
 	qboolean noHead;
 	int cloneFired; //[CloneRifle]
 	int DekaFired;
+	int Dash_Count;
 	bool saberCollisions;
 	int reloadTime;
 
@@ -988,6 +989,7 @@ public:
 		saved_game.write<int32_t>(noHead);
 		saved_game.write<int32_t>(cloneFired);
 		saved_game.write<int32_t>(DekaFired);
+		saved_game.write<int32_t>(Dash_Count);
 		saved_game.write<int32_t>(saberCollisions);
 		saved_game.write<int32_t>(reloadTime);
 	}
@@ -1096,6 +1098,7 @@ public:
 		saved_game.read<int32_t>(noHead);
 		saved_game.read<int32_t>(cloneFired);
 		saved_game.read<int32_t>(DekaFired);
+		saved_game.read<int32_t>(Dash_Count);
 		saved_game.read<int32_t>(saberCollisions);
 		saved_game.read<int32_t>(reloadTime);
 	}
