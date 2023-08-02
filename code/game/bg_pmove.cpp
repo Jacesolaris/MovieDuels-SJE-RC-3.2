@@ -15195,284 +15195,289 @@ saberMoveName_t PM_NPCSaberAttackFromQuad(const int quad)
 		break;
 	}
 
-	if (g_SerenityJediEngineMode->integer == 2 && g_SaberAttackSpeedMD->integer && g_RealisticBlockingMode->integer && //Only proper jedi players get this
-		g_spskill->integer > 1 &&
-		G_EnoughPowerForSpecialMove(pm->ps->forcePower, SABER_ALT_ATTACK_POWER, qtrue) &&
-		!pm->ps->forcePowersActive && !in_camera)
+	if (g_SerenityJediEngineMode->integer)
 	{
-		if (pm->ps->client_num >= MAX_CLIENTS && !PM_ControlledByPlayer())
-		{// Some special bot stuff.
-			if (Next_Kill_Attack_Move_Check[pm->ps->client_num] <= level.time && g_attackskill->integer >= 0)
+		if (g_SerenityJediEngineMode->integer == 2)
+		{
+			if (g_SaberAttackSpeedMD->integer && g_RealisticBlockingMode->integer && //Only proper jedi players get this
+				g_spskill->integer > 1 &&
+				G_EnoughPowerForSpecialMove(pm->ps->forcePower, SABER_ALT_ATTACK_POWER, qtrue) &&
+				!pm->ps->forcePowersActive && !in_camera)
 			{
-				int check_val = 0; // Times 500 for next check interval.
-
-				if (PM_Can_Do_Kill_Lunge_back())
-				{ //BACKSTAB
-					if ((pm->ps->pm_flags & PMF_DUCKED) || pm->cmd.upmove < 0)
+				if (pm->ps->client_num >= MAX_CLIENTS && !PM_ControlledByPlayer())
+				{// Some special AI stuff.
+					if (Next_Kill_Attack_Move_Check[pm->ps->client_num] <= level.time && g_attackskill->integer >= 0)
 					{
-						newmove = LS_A_BACK_CR;
-					}
-					else
-					{
-						int choice = rand() % 3;
+						int check_val = 0; // Times 500 for next check interval.
 
-						if (choice == 1)
-						{
-							newmove = LS_A_BACK;
-						}
-						else if (choice == 2)
-						{
-							newmove = PM_SaberBackflipAttackMove();
-						}
-						else if (choice == 3)
-						{
-							newmove = LS_A_BACKFLIP_ATK;
-						}
-						else
-						{
-							newmove = LS_A_BACKSTAB;
-						}
-					}
-				}
-				else if (PM_Can_Do_Kill_Lunge())
-				{
-					if (pm->ps->pm_flags & PMF_DUCKED)
-					{
-						newmove = PM_SaberLungeAttackMove(qtrue);
-
-						if (d_attackinfo->integer)
-						{
-							gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 0\n");
-						}
-					}
-					else
-					{
-						const int choice = rand() % 9;
-
-						switch (choice)
-						{
-						case 0:
-							newmove = PM_NPC_Force_Leap_Attack();
-
-							if (d_attackinfo->integer)
+						if (PM_Can_Do_Kill_Lunge_back())
+						{ //BACKSTAB
+							if ((pm->ps->pm_flags & PMF_DUCKED) || pm->cmd.upmove < 0)
 							{
-								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 1\n");
-							}
-							break;
-						case 1:
-							newmove = PM_DoAI_Fake(qtrue);
-
-							if (d_attackinfo->integer)
-							{
-								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 2\n");
-							}
-							break;
-						case 2:
-							newmove = LS_A1_SPECIAL;
-
-							if (d_attackinfo->integer)
-							{
-								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 3\n");
-							}
-							break;
-						case 3:
-							newmove = LS_A2_SPECIAL;
-
-							if (d_attackinfo->integer)
-							{
-								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 4\n");
-							}
-							break;
-						case 4:
-							newmove = LS_A3_SPECIAL;
-
-							if (d_attackinfo->integer)
-							{
-								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 5\n");
-							}
-							break;
-						case 5:
-							newmove = LS_JUMPATTACK_STAFF_RIGHT;
-
-							if (d_attackinfo->integer)
-							{
-								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 6\n");
-							}
-							break;
-						case 6:
-							newmove = LS_JUMPATTACK_STAFF_LEFT;
-
-							if (d_attackinfo->integer)
-							{
-								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 7\n");
-							}
-							break;
-						case 7:
-							if (pm->ps->saber_anim_level == SS_DUAL)
-							{
-								newmove = LS_DUAL_SPIN_PROTECT;
-							}
-							else if (pm->ps->saber_anim_level == SS_STAFF)
-							{
-								newmove = LS_STAFF_SOULCAL;
+								newmove = LS_A_BACK_CR;
 							}
 							else
 							{
-								newmove = LS_A_JUMP_T__B_;
-							}
+								int choice = rand() % 3;
 
-							if (d_attackinfo->integer)
-							{
-								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 8\n");
+								if (choice == 1)
+								{
+									newmove = LS_A_BACK;
+								}
+								else if (choice == 2)
+								{
+									newmove = PM_SaberBackflipAttackMove();
+								}
+								else if (choice == 3)
+								{
+									newmove = LS_A_BACKFLIP_ATK;
+								}
+								else
+								{
+									newmove = LS_A_BACKSTAB;
+								}
 							}
-							break;
-						case 8:
-							if (pm->ps->saber_anim_level == SS_DUAL)
+						}
+						else if (PM_Can_Do_Kill_Lunge())
+						{
+							if (pm->ps->pm_flags & PMF_DUCKED)
 							{
-								newmove = LS_JUMPATTACK_DUAL;
-							}
-							else if (pm->ps->saber_anim_level == SS_STAFF)
-							{
-								newmove = LS_JUMPATTACK_STAFF_RIGHT;
+								newmove = PM_SaberLungeAttackMove(qtrue);
+
+								if (d_attackinfo->integer)
+								{
+									gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 0\n");
+								}
 							}
 							else
 							{
-								newmove = LS_SPINATTACK;
-							}
+								const int choice = rand() % 9;
 
-							if (d_attackinfo->integer)
-							{
-								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 9\n");
-							}
-							break;
-						default:
-							newmove = PM_SaberFlipOverAttackMove();
+								switch (choice)
+								{
+								case 0:
+									newmove = PM_NPC_Force_Leap_Attack();
 
-							if (d_attackinfo->integer)
-							{
-								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 10\n");
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 1\n");
+									}
+									break;
+								case 1:
+									newmove = PM_DoAI_Fake(qtrue);
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 2\n");
+									}
+									break;
+								case 2:
+									newmove = LS_A1_SPECIAL;
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 3\n");
+									}
+									break;
+								case 3:
+									newmove = LS_A2_SPECIAL;
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 4\n");
+									}
+									break;
+								case 4:
+									newmove = LS_A3_SPECIAL;
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 5\n");
+									}
+									break;
+								case 5:
+									newmove = LS_JUMPATTACK_STAFF_RIGHT;
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 6\n");
+									}
+									break;
+								case 6:
+									newmove = LS_JUMPATTACK_STAFF_LEFT;
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 7\n");
+									}
+									break;
+								case 7:
+									if (pm->ps->saber_anim_level == SS_DUAL)
+									{
+										newmove = LS_DUAL_SPIN_PROTECT;
+									}
+									else if (pm->ps->saber_anim_level == SS_STAFF)
+									{
+										newmove = LS_STAFF_SOULCAL;
+									}
+									else
+									{
+										newmove = LS_A_JUMP_T__B_;
+									}
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 8\n");
+									}
+									break;
+								case 8:
+									if (pm->ps->saber_anim_level == SS_DUAL)
+									{
+										newmove = LS_JUMPATTACK_DUAL;
+									}
+									else if (pm->ps->saber_anim_level == SS_STAFF)
+									{
+										newmove = LS_JUMPATTACK_STAFF_RIGHT;
+									}
+									else
+									{
+										newmove = LS_SPINATTACK;
+									}
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 9\n");
+									}
+									break;
+								default:
+									newmove = PM_SaberFlipOverAttackMove();
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 10\n");
+									}
+									break;
+								}
 							}
-							break;
+							pm->ps->weaponstate = WEAPON_FIRING;
+							WP_ForcePowerDrain(pm->gent, FP_SABER_OFFENSE, SABER_ALT_ATTACK_POWER_FB);
 						}
+
+						check_val = g_attackskill->integer;
+
+						if (check_val <= 0)
+						{
+							check_val = 1;
+						}
+
+						Next_Kill_Attack_Move_Check[pm->ps->client_num] = level.time + (40000 / check_val); // 20 secs / g_attackskill->integer
 					}
-					pm->ps->weaponstate = WEAPON_FIRING;
-					WP_ForcePowerDrain(pm->gent, FP_SABER_OFFENSE, SABER_ALT_ATTACK_POWER_FB);
 				}
-
-				check_val = g_attackskill->integer;
-
-				if (check_val <= 0)
-				{
-					check_val = 1;
-				}
-
-				Next_Kill_Attack_Move_Check[pm->ps->client_num] = level.time + (40000 / check_val); // 20 secs / g_attackskill->integer
 			}
 		}
-	}
-	else
-	{
-		if (g_SerenityJediEngineMode->integer > 1 &&
-			g_spskill->integer > 1 &&
-			G_EnoughPowerForSpecialMove(pm->ps->forcePower, SABER_ALT_ATTACK_POWER, qtrue) &&
-			!pm->ps->forcePowersActive && !in_camera)
+		else
 		{
-			if (pm->ps->client_num >= MAX_CLIENTS && !PM_ControlledByPlayer())
-			{// JaceSolaris
-				if (Next_Kill_Attack_Move_Check[pm->ps->client_num] <= level.time && g_attackskill->integer >= 0)
-				{
-					int check_val = 0;
-
-					if (PM_Can_Do_Kill_Lunge())
+			if (g_spskill->integer > 1 &&
+				G_EnoughPowerForSpecialMove(pm->ps->forcePower, SABER_ALT_ATTACK_POWER, qtrue) &&
+				!pm->ps->forcePowersActive && !in_camera)
+			{
+				if (pm->ps->client_num >= MAX_CLIENTS && !PM_ControlledByPlayer())
+				{// JaceSolaris
+					if (Next_Kill_Attack_Move_Check[pm->ps->client_num] <= level.time && g_attackskill->integer >= 0)
 					{
-						if ((pm->ps->pm_flags & PMF_DUCKED) || pm->cmd.upmove < 0)
+						int check_val = 0;
+
+						if (PM_Can_Do_Kill_Lunge())
 						{
-							newmove = PM_SaberLungeAttackMove(qtrue);
-
-							if (d_attackinfo->integer)
+							if ((pm->ps->pm_flags & PMF_DUCKED) || pm->cmd.upmove < 0)
 							{
-								gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 0\n");
-							}
-						}
-						else
-						{
-							int choice = rand() % 3;
-
-							if (choice == 1)
-							{
-								newmove = PM_NPC_Force_Leap_Attack();
+								newmove = PM_SaberLungeAttackMove(qtrue);
 
 								if (d_attackinfo->integer)
 								{
-									gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 1\n");
-								}
-							}
-							else if (choice == 2)
-							{
-								newmove = PM_DoAI_Fake(qtrue);
-
-								if (d_attackinfo->integer)
-								{
-									gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 2\n");
-								}
-							}
-							else if (choice == 3)
-							{
-								switch (pm->ps->saber_anim_level)
-								{
-								case SS_FAST:
-									newmove = LS_A1_SPECIAL;
-									break;
-								case SS_MEDIUM:
-									newmove = LS_A2_SPECIAL;
-									break;
-								case SS_STRONG:
-									newmove = LS_A3_SPECIAL;
-									break;
-								case SS_DESANN:
-									newmove = LS_A3_SPECIAL;
-									break;
-								case SS_TAVION:
-									newmove = LS_A1_SPECIAL;
-									break;
-								case SS_DUAL:
-									newmove = LS_DUAL_SPIN_PROTECT;
-									break;
-								case SS_STAFF:
-									newmove = LS_STAFF_SOULCAL;
-									break;
-								default:;
-									newmove = LS_A2_SPECIAL;
-									break;
-								}
-
-								if (d_attackinfo->integer)
-								{
-									gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 3\n");
+									gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 0\n");
 								}
 							}
 							else
 							{
-								newmove = PM_SaberFlipOverAttackMove();
+								int choice = rand() % 3;
 
-								if (d_attackinfo->integer)
+								if (choice == 1)
 								{
-									gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 4\n");
+									newmove = PM_NPC_Force_Leap_Attack();
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 1\n");
+									}
+								}
+								else if (choice == 2)
+								{
+									newmove = PM_DoAI_Fake(qtrue);
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 2\n");
+									}
+								}
+								else if (choice == 3)
+								{
+									switch (pm->ps->saber_anim_level)
+									{
+									case SS_FAST:
+										newmove = LS_A1_SPECIAL;
+										break;
+									case SS_MEDIUM:
+										newmove = LS_A2_SPECIAL;
+										break;
+									case SS_STRONG:
+										newmove = LS_A3_SPECIAL;
+										break;
+									case SS_DESANN:
+										newmove = LS_A3_SPECIAL;
+										break;
+									case SS_TAVION:
+										newmove = LS_A1_SPECIAL;
+										break;
+									case SS_DUAL:
+										newmove = LS_DUAL_SPIN_PROTECT;
+										break;
+									case SS_STAFF:
+										newmove = LS_STAFF_SOULCAL;
+										break;
+									default:;
+										newmove = LS_A2_SPECIAL;
+										break;
+									}
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 3\n");
+									}
+								}
+								else
+								{
+									newmove = PM_SaberFlipOverAttackMove();
+
+									if (d_attackinfo->integer)
+									{
+										gi.Printf(S_COLOR_MAGENTA"Next_Kill_Attack_Move_Check 4\n");
+									}
 								}
 							}
+							pm->ps->weaponstate = WEAPON_FIRING;
+							WP_ForcePowerDrain(pm->gent, FP_SABER_OFFENSE, SABER_ALT_ATTACK_POWER_FB);
 						}
-						pm->ps->weaponstate = WEAPON_FIRING;
-						WP_ForcePowerDrain(pm->gent, FP_SABER_OFFENSE, SABER_ALT_ATTACK_POWER_FB);
+
+						check_val = g_attackskill->integer;
+
+						if (check_val <= 0)
+						{
+							check_val = 1;
+						}
+
+						Next_Kill_Attack_Move_Check[pm->ps->client_num] = level.time + (40000 / check_val); // 40 secs / g_attackskill->integer
 					}
-
-					check_val = g_attackskill->integer;
-
-					if (check_val <= 0)
-					{
-						check_val = 1;
-					}
-
-					Next_Kill_Attack_Move_Check[pm->ps->client_num] = level.time + (40000 / check_val); // 40 secs / g_attackskill->integer
 				}
 			}
 		}

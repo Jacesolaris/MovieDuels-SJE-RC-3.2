@@ -3149,7 +3149,7 @@ qboolean WP_SaberApplyDamageMD(gentity_t* ent, const float base_damage, const in
 				}
 				if (totalDmg[i] > 0)
 				{
-					if (g_SerenityJediEngineMode->integer == 2)
+					if (g_SerenityJediEngineMode->integer == 2 && victim->health >= 1)
 					{
 						if (ent->s.number < MAX_CLIENTS || G_ControlledByPlayer(ent))
 						{
@@ -4910,7 +4910,7 @@ qboolean WP_SaberDamageForTrace(const int ignore, vec3_t start, vec3_t end, floa
 			VectorCopy(tr.plane.normal, saberHitNormal);
 		}
 		return qtrue;
-}
+	}
 
 	if (&g_entities[tr.entity_num])
 	{
@@ -5111,9 +5111,9 @@ qboolean WP_SaberDamageForTrace(const int ignore, vec3_t start, vec3_t end, floa
 							if (!attacker->s.number)
 							{
 								gi.Printf(S_COLOR_BLUE"%d saber hit saber dist %4.2f, frac %4.2f\n", level.time, sabersDist, saberHitFraction);
-					}
+							}
 							saberHitFraction = tr.fraction;
-				}
+						}
 #endif//FINAL_BUILD
 					}
 #ifndef FINAL_BUILD
@@ -5124,7 +5124,7 @@ qboolean WP_SaberDamageForTrace(const int ignore, vec3_t start, vec3_t end, floa
 #endif//FINAL_BUILD
 					VectorCopy(tr.endpos, saberHitLocation);
 					saberHitEntity = tr.entity_num;
-			}
+				}
 				return qfalse; // Exit, but we didn't hit the wall.
 			}
 		}
@@ -5179,7 +5179,7 @@ qboolean WP_SaberDamageForTrace(const int ignore, vec3_t start, vec3_t end, floa
 				}
 				return qfalse; // Exit, but we didn't hit the wall.
 			}
-			}
+		}
 
 		if (hit_ent->takedamage)
 		{
@@ -5360,10 +5360,10 @@ qboolean WP_SaberDamageForTrace(const int ignore, vec3_t start, vec3_t end, floa
 				}
 			}
 		}
-		}
+	}
 
 	return qfalse;
-	}
+}
 
 constexpr auto LOCK_IDEAL_DIST_TOP = 32.0f;
 constexpr auto LOCK_IDEAL_DIST_CIRCLE = 48.0f;
@@ -5568,7 +5568,7 @@ qboolean WP_SabersCheckLock2(gentity_t* attacker, gentity_t* defender, sabersLoc
 	float ideal_dist = 48.0f;
 	//FIXME: this distances need to be modified by the lengths of the sabers involved...
 	//MATCH ANIMS
-	
+
 	if (lock_mode == LOCK_KYLE_GRAB1
 		|| lock_mode == LOCK_KYLE_GRAB2
 		|| lock_mode == LOCK_KYLE_GRAB3)
@@ -5855,7 +5855,7 @@ qboolean WP_SabersCheckLock2(gentity_t* attacker, gentity_t* defender, sabersLoc
 				Com_Printf("%s starting saber lock, anim = %s, %d frames to go!\n", defender->NPC_type, anim_table[defAnim].name, advance);
 			}
 #endif
-}
+		}
 	}
 	VectorClear(attacker->client->ps.velocity);
 	VectorClear(attacker->client->ps.moveDir);
@@ -7860,7 +7860,7 @@ void WP_SaberDamageTrace(gentity_t* ent, int saber_num, int blade_num)
 		vectoangles(md1, ma1);
 		vectoangles(md2, ma2);
 
-		vec3_t curMD2; 
+		vec3_t curMD2;
 		VectorCopy(md1, curMD2);
 		VectorCopy(base_old, cur_base2);
 
@@ -8363,16 +8363,16 @@ void WP_SaberDamageTrace(gentity_t* ent, int saber_num, int blade_num)
 									hit_owner->client->ps.saberBounceMove = LS_NONE;
 								}
 							}
-								}
-						collision_resolved = qtrue;
-							}
 						}
+						collision_resolved = qtrue;
+					}
+				}
 				else
 				{
 					//some other kind of in-hand saber collision
 				}
-					}
-				}
+			}
+		}
 		else
 		{
 			//some kind of in-flight collision
@@ -8611,7 +8611,7 @@ void WP_SaberDamageTrace(gentity_t* ent, int saber_num, int blade_num)
 				}
 			}
 		}
-			}
+	}
 
 	if (ent->client->ps.saberLockTime > level.time)
 	{
@@ -8716,8 +8716,8 @@ void WP_SaberDamageTrace(gentity_t* ent, int saber_num, int blade_num)
 			//FIXME: is this impact on ground or not?
 			AddSightEvent(ent, ent->currentOrigin, 256, AEL_DISCOVERED, 50);
 		}
-		}
 	}
+}
 
 //////SERENITYJEDIENGINE MODE //////////////////////////////////////////////////////////////////////////
 
@@ -16900,7 +16900,7 @@ qboolean WP_SaberBlockNonRandom(gentity_t* self, vec3_t hitloc, const qboolean m
 
 	self->client->ps.userInt3 &= ~(1 << FLAG_PREBLOCK);
 	return qtrue;
-			}
+}
 
 qboolean WP_SaberMBlockDirection(gentity_t* self, vec3_t hitloc, const qboolean missileBlock)
 {
@@ -29886,7 +29886,7 @@ void ForceGrip(gentity_t* self)
 			//can't grip a vehicle
 			return;
 		}
-}
+	}
 
 	if (trace_ent->client)
 	{
@@ -30236,7 +30236,7 @@ void ForceGrip(gentity_t* self)
 			G_SoundOnEnt(self, CHAN_BODY, "sound/weapons/force/grip.wav");
 		}
 	}
-	}
+}
 
 qboolean ForceLightningCheck2Handed(const gentity_t* self)
 {
@@ -34955,7 +34955,7 @@ void ForceDrainDamage(gentity_t* self, gentity_t* trace_ent, vec3_t dir, vec3_t 
 				{
 					//do damage, too
 					G_Damage(trace_ent, self, self, dir, impact_point, dmg, dflags, MOD_FORCE_DRAIN);
-					
+
 					if (g_SerenityJediEngineMode->integer)
 					{// this makes him do the pain anim
 						Jedi_DrainReaction(trace_ent);
@@ -37147,7 +37147,7 @@ void ForceGrasp(gentity_t* self)
 			//can't grip a vehicle
 			return;
 		}
-}
+	}
 	if (trace_ent->client)
 	{
 		if (trace_ent->client->ps.forceJumpZStart)
