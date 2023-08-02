@@ -3149,6 +3149,13 @@ qboolean WP_SaberApplyDamageMD(gentity_t* ent, const float base_damage, const in
 				}
 				if (totalDmg[i] > 0)
 				{
+					if (g_SerenityJediEngineMode->integer == 2)
+					{
+						if (ent->s.number < MAX_CLIENTS || G_ControlledByPlayer(ent))
+						{
+							CGCam_BlockShakeSP(0.25f, 100);
+						}
+					}
 					//actually want to do *some* damage here
 					if (victim->client
 						&& victim->client->NPC_class == CLASS_WAMPA
