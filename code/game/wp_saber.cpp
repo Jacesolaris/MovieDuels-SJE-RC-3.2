@@ -71,6 +71,7 @@ extern cvar_t* g_saberRestrictForce;
 extern cvar_t* g_saberPickuppableDroppedSabers;
 extern cvar_t* debug_subdivision;
 extern cvar_t* d_slowmoaction;
+extern cvar_t* g_SaberAttackSpeedMD;
 void wp_block_points_regenerate_over_ride(const gentity_t* self, int override_amt);
 extern qboolean NPC_IsOversized(const gentity_t* self);
 extern void npc_check_speak(gentity_t* speaker_npc);
@@ -3149,7 +3150,7 @@ qboolean WP_SaberApplyDamageMD(gentity_t* ent, const float base_damage, const in
 				}
 				if (totalDmg[i] > 0)
 				{
-					if (g_SerenityJediEngineMode->integer == 2 && victim->health >= 1)
+					if (g_SaberAttackSpeedMD->integer && g_RealisticBlockingMode->integer && g_SerenityJediEngineMode->integer == 2 && victim->health >= 1)
 					{
 						if (ent->s.number < MAX_CLIENTS || G_ControlledByPlayer(ent))
 						{
