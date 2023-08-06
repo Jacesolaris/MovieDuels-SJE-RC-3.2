@@ -278,6 +278,9 @@ extern cvar_t* g_DebugSaberCombat;
 extern cvar_t* g_lightningdamage;
 extern cvar_t* com_outcast;
 
+extern cvar_t* g_SaberBounceOnWalls;
+extern cvar_t* g_SaberMustReturn;
+
 extern int g_crosshairEntNum;
 
 qboolean g_saberNoEffects = qfalse;
@@ -4905,7 +4908,7 @@ qboolean WP_SaberDamageForTrace(const int ignore, vec3_t start, vec3_t end, floa
 
 	if (tr.entity_num == ENTITYNUM_WORLD)
 	{
-		if (attacker && attacker->client && attacker->client->ps.saber[saber_num].saberFlags & SFL_BOUNCE_ON_WALLS)
+		if (attacker && attacker->client && (attacker->client->ps.saber[saber_num].saberFlags & SFL_BOUNCE_ON_WALLS || g_SaberBounceOnWalls->integer))
 		{
 			VectorCopy(tr.endpos, saberHitLocation);
 			VectorCopy(tr.plane.normal, saberHitNormal);
@@ -8648,11 +8651,8 @@ void WP_SaberDamageTrace(gentity_t* ent, int saber_num, int blade_num)
 	else
 	{
 		if (hit_wall
-			&& ent->client->ps.saber[saber_num].saberFlags & SFL_BOUNCE_ON_WALLS
-			&& (PM_SaberInAttackPure(ent->client->ps.saber_move) //only in a normal attack anim
-				|| ent->client->ps.saber_move == LS_A_JUMP_T__B_)
-			//or in the strong jump-fwd-attack "death from above" move
-			)
+			&& (ent->client->ps.saber[saber_num].saberFlags & SFL_BOUNCE_ON_WALLS || g_SaberBounceOnWalls->integer)
+			&& (PM_SaberInAttackPure(ent->client->ps.saber_move) || ent->client->ps.saber_move == LS_A_JUMP_T__B_))
 		{
 			//bounce off walls
 			//do anim
@@ -10385,9 +10385,8 @@ void wp_saber_damage_trace_amd(gentity_t* ent, int saber_num, int blade_num)
 	else
 	{
 		if (hit_wall
-			&& ent->client->ps.saber[saber_num].saberFlags & SFL_BOUNCE_ON_WALLS
-			&& (PM_SaberInAttackPure(ent->client->ps.saber_move) //only in a normal attack anim
-				|| ent->client->ps.saber_move == LS_A_JUMP_T__B_))
+			&& (ent->client->ps.saber[saber_num].saberFlags & SFL_BOUNCE_ON_WALLS || g_SaberBounceOnWalls->integer)
+			&& (PM_SaberInAttackPure(ent->client->ps.saber_move) || ent->client->ps.saber_move == LS_A_JUMP_T__B_))
 		{
 			//bounce off walls
 			//do anim
@@ -11777,9 +11776,8 @@ void WP_SaberDamageTrace_MD(gentity_t* ent, int saber_num, int blade_num)
 	else
 	{
 		if (hit_wall
-			&& ent->client->ps.saber[saber_num].saberFlags & SFL_BOUNCE_ON_WALLS
-			&& (PM_SaberInAttackPure(ent->client->ps.saber_move) //only in a normal attack anim
-				|| ent->client->ps.saber_move == LS_A_JUMP_T__B_))
+			&& (ent->client->ps.saber[saber_num].saberFlags & SFL_BOUNCE_ON_WALLS || g_SaberBounceOnWalls->integer)
+			&& (PM_SaberInAttackPure(ent->client->ps.saber_move) || ent->client->ps.saber_move == LS_A_JUMP_T__B_))
 		{
 			//bounce off walls
 			//do anim
@@ -12089,7 +12087,7 @@ void WP_SaberImpact(gentity_t* owner, gentity_t* saber, trace_t* trace)
 
 	if (saber->s.pos.trType == TR_LINEAR)
 	{
-		if (g_SerenityJediEngineMode->integer)
+		if (g_SerenityJediEngineMode->integer && g_SaberMustReturn->integer < 1)
 		{
 			//hit a wall?
 			WP_SaberDrop(saber->owner, saber);
@@ -12423,7 +12421,7 @@ void WP_SaberInFlightReflectCheck(gentity_t* self)
 						client->ps.saberEntityState != SES_RETURNING)
 					{
 						//it's on and being controlled
-						if (g_SerenityJediEngineMode->integer)
+						if (g_SerenityJediEngineMode->integer && g_SaberMustReturn->integer < 1)
 						{
 							WP_SaberDrop(missile_list[x]->owner, missile_list[x]);
 						}
@@ -13756,7 +13754,7 @@ void WP_SaberThrow(gentity_t* self, const usercmd_t* ucmd)
 				else
 				{
 					//out of force power, return to me
-					if (g_SerenityJediEngineMode->integer)
+					if (g_SerenityJediEngineMode->integer && g_SaberMustReturn->integer < 1)
 					{
 						if (g_SerenityJediEngineMode->integer == 2)
 						{
@@ -13782,7 +13780,7 @@ void WP_SaberThrow(gentity_t* self, const usercmd_t* ucmd)
 				if (self->client->ps.saber[0].Active())
 				{
 					//still on
-					if (g_SerenityJediEngineMode->integer)
+					if (g_SerenityJediEngineMode->integer && g_SaberMustReturn->integer < 1)
 					{
 						if (g_SerenityJediEngineMode->integer == 2)
 						{
@@ -13807,7 +13805,7 @@ void WP_SaberThrow(gentity_t* self, const usercmd_t* ucmd)
 				if (self->client->ps.saber[0].Active())
 				{
 					//still on
-					if (g_SerenityJediEngineMode->integer)
+					if (g_SerenityJediEngineMode->integer && g_SaberMustReturn->integer < 1)
 					{
 						if (g_SerenityJediEngineMode->integer == 2)
 						{
@@ -23097,7 +23095,7 @@ void ForceThrow_JKA(gentity_t* self, qboolean pull, qboolean fake)
 						}
 						else
 						{
-							if (g_SerenityJediEngineMode->integer)
+							if (g_SerenityJediEngineMode->integer && g_SaberMustReturn->integer < 1)
 							{
 								WP_SaberDrop(push_target[x]->owner, push_target[x]);
 							}
@@ -24626,7 +24624,7 @@ void ForceThrow_MD(gentity_t* self, qboolean pull, qboolean fake) //MD Mode Push
 						}
 						else
 						{
-							if (g_SerenityJediEngineMode->integer)
+							if (g_SerenityJediEngineMode->integer && g_SaberMustReturn->integer < 1)
 							{
 								WP_SaberDrop(push_target[x]->owner, push_target[x]);
 							}
@@ -26522,7 +26520,7 @@ void ForceRepulse(gentity_t* self, qboolean pull, qboolean fake)
 							}
 							else
 							{
-								if (g_SerenityJediEngineMode->integer)
+								if (g_SerenityJediEngineMode->integer && g_SaberMustReturn->integer < 1)
 								{
 									WP_SaberDrop(push_target[x]->owner, push_target[x]);
 								}
@@ -27572,7 +27570,7 @@ void ForceRepulse(gentity_t* self, qboolean pull, qboolean fake)
 							}
 							else
 							{
-								if (g_SerenityJediEngineMode->integer)
+								if (g_SerenityJediEngineMode->integer && g_SaberMustReturn->integer < 1)
 								{
 									WP_SaberDrop(push_target[x]->owner, push_target[x]);
 								}
@@ -28648,7 +28646,7 @@ void ForceRepulseThrow(gentity_t* self, int charge_time)
 					}
 					else
 					{
-						if (g_SerenityJediEngineMode->integer)
+						if (g_SerenityJediEngineMode->integer && g_SaberMustReturn->integer < 1)
 						{
 							WP_SaberDrop(push_target[x]->owner, push_target[x]);
 						}

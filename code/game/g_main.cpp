@@ -321,6 +321,9 @@ cvar_t* g_attackskill;
 cvar_t* g_saberLockCinematicCamera;
 cvar_t* g_ffamode;
 
+cvar_t* g_SaberBounceOnWalls;
+cvar_t* g_SaberMustReturn;
+
 extern char* G_GetLocationForEnt(const gentity_t* ent);
 extern void CP_FindCombatPointWaypoints();
 extern qboolean InFront(vec3_t spot, vec3_t from, vec3_t fromAngles, float threshHold = 0.0f);
@@ -958,6 +961,10 @@ void G_InitCvars()
 	g_saberLockCinematicCamera = gi.cvar("g_saberLockCinematicCamera", "0", CVAR_ARCHIVE);
 
 	g_ffamode = gi.cvar("g_ffamode", "0", CVAR_ARCHIVE);
+
+	g_SaberBounceOnWalls = gi.cvar("g_saberbounceonwalls", "0", CVAR_ARCHIVE);
+
+	g_SaberMustReturn = gi.cvar("g_sabermustreturn", "0", CVAR_ARCHIVE);
 }
 
 /*
