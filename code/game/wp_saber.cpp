@@ -200,6 +200,7 @@ extern qboolean BG_SaberInNonIdleDamageMove(const playerState_t* ps);
 qboolean BG_SaberInPartialDamageMove(gentity_t* self);
 extern qboolean PM_KickingAnim(int anim);
 extern qboolean BG_InSlowBounce(const playerState_t* ps);
+extern qboolean PM_InSlowBounce(const playerState_t* ps);
 qboolean G_ActiveParry(gentity_t* self, const gentity_t* attacker, vec3_t hit_loc);
 int WP_SaberMustBlock(gentity_t* self, const gentity_t* atk, qboolean check_b_box_block, vec3_t point, int r_saber_num,
 	int r_blade_num);
@@ -5669,25 +5670,25 @@ qboolean WP_SabersCheckLock2(gentity_t* attacker, gentity_t* defender, sabersLoc
 			case LOCK_DIAG_BR:
 				att_anim = BOTH_CWCIRCLELOCK; // - starts on left, to right
 				def_anim = BOTH_CCWCIRCLELOCK; // - starts on right, to left
-				att_start = defStart = 0.85f; //move to end of anim
+				att_start = defStart = 0.15f; //move to end of anim
 				ideal_dist = LOCK_IDEAL_DIST_CIRCLE;
 				break;
 			case LOCK_DIAG_BL:
 				att_anim = BOTH_CCWCIRCLELOCK; // - starts on right, to left
 				def_anim = BOTH_CWCIRCLELOCK; // - starts on left, to right
-				att_start = defStart = 0.85f; //move to end of anim
+				att_start = defStart = 0.15f; //move to end of anim
 				ideal_dist = LOCK_IDEAL_DIST_CIRCLE;
 				break;
 			case LOCK_R:
 				att_anim = BOTH_CWCIRCLELOCK; // - starts on left, to right
 				def_anim = BOTH_CCWCIRCLELOCK; // - starts on right, to left
-				att_start = defStart = 0.75f; //move to end of anim
+				att_start = defStart = 0.25f; //move to end of anim
 				ideal_dist = LOCK_IDEAL_DIST_CIRCLE;
 				break;
 			case LOCK_L:
 				att_anim = BOTH_CCWCIRCLELOCK; // - starts on right, to left
 				def_anim = BOTH_CWCIRCLELOCK; // - starts on left, to right
-				att_start = defStart = 0.75f; //move to end of anim
+				att_start = defStart = 0.25f; //move to end of anim
 				ideal_dist = LOCK_IDEAL_DIST_CIRCLE;
 				break;
 			default:
@@ -6034,6 +6035,8 @@ qboolean WP_SabersCheckLock2(gentity_t* attacker, gentity_t* defender, sabersLoc
 
 qboolean WP_SabersCheckLock(gentity_t* ent1, gentity_t* ent2)
 {
+	int lock_quad;
+
 	if (ent1->client->playerTeam == ent2->client->playerTeam)
 	{
 		return qfalse;
@@ -6095,7 +6098,6 @@ qboolean WP_SabersCheckLock(gentity_t* ent1, gentity_t* ent2)
 		return qfalse;
 	}
 	//Check for certain anims that *cannot* lock
-	//FIXME: there should probably be a whole *list* of these, but I'll put them in as they come up
 	if (ent1->client->ps.torsoAnim == BOTH_A2_STABBACK1 && ent1->client->ps.torsoAnimTimer > 300)
 	{
 		//can't lock when saber is behind you
@@ -6118,183 +6120,44 @@ qboolean WP_SabersCheckLock(gentity_t* ent1, gentity_t* ent2)
 		//still finishing the last lock break!
 		return qfalse;
 	}
-	if (BG_InSlowBounce(&ent1->client->ps) || BG_InSlowBounce(&ent2->client->ps))
+	if (PM_InSlowBounce(&ent1->client->ps) || PM_InSlowBounce(&ent2->client->ps))
 	{
 		return qfalse;
 	}
 
-	//BR to TL lock
-	if (ent1->client->ps.torsoAnim == BOTH_A1_BR_TL ||
-		ent1->client->ps.torsoAnim == BOTH_A2_BR_TL ||
-		ent1->client->ps.torsoAnim == BOTH_A3_BR_TL ||
-		ent1->client->ps.torsoAnim == BOTH_A4_BR_TL ||
-		ent1->client->ps.torsoAnim == BOTH_A5_BR_TL ||
-		ent1->client->ps.torsoAnim == BOTH_A6_BR_TL ||
-		ent1->client->ps.torsoAnim == BOTH_A7_BR_TL)
+	if (PM_SaberInParry(ent1->client->ps.saber_move))
 	{
-		//ent1 is attacking in the opposite diagonal
+		//use the endquad of the move
+		lock_quad = saberMoveData[ent1->client->ps.saber_move].endQuad;
+	}
+	else
+	{
+		//use the startquad of the move
+		lock_quad = saberMoveData[ent1->client->ps.saber_move].startQuad;
+	}
+
+	switch (lock_quad)
+	{
+	case Q_BR:
 		return WP_SabersCheckLock2(ent1, ent2, LOCK_DIAG_BR);
-	}
-	if (ent2->client->ps.torsoAnim == BOTH_A1_BR_TL ||
-		ent2->client->ps.torsoAnim == BOTH_A2_BR_TL ||
-		ent2->client->ps.torsoAnim == BOTH_A3_BR_TL ||
-		ent2->client->ps.torsoAnim == BOTH_A4_BR_TL ||
-		ent2->client->ps.torsoAnim == BOTH_A5_BR_TL ||
-		ent2->client->ps.torsoAnim == BOTH_A6_BR_TL ||
-		ent2->client->ps.torsoAnim == BOTH_A7_BR_TL)
-	{
-		//ent2 is attacking in the opposite diagonal
-		return WP_SabersCheckLock2(ent2, ent1, LOCK_DIAG_BR);
-	}
-	//BL to TR lock
-	if (ent1->client->ps.torsoAnim == BOTH_A1_BL_TR ||
-		ent1->client->ps.torsoAnim == BOTH_A2_BL_TR ||
-		ent1->client->ps.torsoAnim == BOTH_A3_BL_TR ||
-		ent1->client->ps.torsoAnim == BOTH_A4_BL_TR ||
-		ent1->client->ps.torsoAnim == BOTH_A5_BL_TR ||
-		ent1->client->ps.torsoAnim == BOTH_A6_BL_TR ||
-		ent1->client->ps.torsoAnim == BOTH_A7_BL_TR)
-	{
-		//ent1 is attacking in the opposite diagonal
-		return WP_SabersCheckLock2(ent1, ent2, LOCK_DIAG_BL);
-	}
-	if (ent2->client->ps.torsoAnim == BOTH_A1_BL_TR ||
-		ent2->client->ps.torsoAnim == BOTH_A2_BL_TR ||
-		ent2->client->ps.torsoAnim == BOTH_A3_BL_TR ||
-		ent2->client->ps.torsoAnim == BOTH_A4_BL_TR ||
-		ent2->client->ps.torsoAnim == BOTH_A5_BL_TR ||
-		ent2->client->ps.torsoAnim == BOTH_A6_BL_TR ||
-		ent2->client->ps.torsoAnim == BOTH_A7_BL_TR)
-	{
-		//ent2 is attacking in the opposite diagonal
-		return WP_SabersCheckLock2(ent2, ent1, LOCK_DIAG_BL);
-	}
-	//L to R lock
-	if (ent1->client->ps.torsoAnim == BOTH_A1__L__R ||
-		ent1->client->ps.torsoAnim == BOTH_A2__L__R ||
-		ent1->client->ps.torsoAnim == BOTH_A3__L__R ||
-		ent1->client->ps.torsoAnim == BOTH_A4__L__R ||
-		ent1->client->ps.torsoAnim == BOTH_A5__L__R ||
-		ent1->client->ps.torsoAnim == BOTH_A6__L__R ||
-		ent1->client->ps.torsoAnim == BOTH_A7__L__R)
-	{
-		//ent1 is attacking l to r
-		return WP_SabersCheckLock2(ent1, ent2, LOCK_L);
-	}
-	if (ent2->client->ps.torsoAnim == BOTH_A1__L__R ||
-		ent2->client->ps.torsoAnim == BOTH_A2__L__R ||
-		ent2->client->ps.torsoAnim == BOTH_A3__L__R ||
-		ent2->client->ps.torsoAnim == BOTH_A4__L__R ||
-		ent2->client->ps.torsoAnim == BOTH_A5__L__R ||
-		ent2->client->ps.torsoAnim == BOTH_A6__L__R ||
-		ent2->client->ps.torsoAnim == BOTH_A7__L__R)
-	{
-		//ent2 is attacking l to r
-		return WP_SabersCheckLock2(ent2, ent1, LOCK_L);
-	}
-	//R to L lock
-	if (ent1->client->ps.torsoAnim == BOTH_A1__R__L ||
-		ent1->client->ps.torsoAnim == BOTH_A2__R__L ||
-		ent1->client->ps.torsoAnim == BOTH_A3__R__L ||
-		ent1->client->ps.torsoAnim == BOTH_A4__R__L ||
-		ent1->client->ps.torsoAnim == BOTH_A5__R__L ||
-		ent1->client->ps.torsoAnim == BOTH_A6__R__L ||
-		ent1->client->ps.torsoAnim == BOTH_A7__R__L)
-	{
-		//ent1 is attacking r to l
+	case Q_R:
 		return WP_SabersCheckLock2(ent1, ent2, LOCK_R);
-	}
-	if (ent2->client->ps.torsoAnim == BOTH_A1__R__L ||
-		ent2->client->ps.torsoAnim == BOTH_A2__R__L ||
-		ent2->client->ps.torsoAnim == BOTH_A3__R__L ||
-		ent2->client->ps.torsoAnim == BOTH_A4__R__L ||
-		ent2->client->ps.torsoAnim == BOTH_A5__R__L ||
-		ent2->client->ps.torsoAnim == BOTH_A6__R__L ||
-		ent2->client->ps.torsoAnim == BOTH_A7__R__L)
-	{
-		//ent2 is attacking r to l
-		return WP_SabersCheckLock2(ent2, ent1, LOCK_R);
-	}
-	//TR to BL lock
-	if (ent1->client->ps.torsoAnim == BOTH_A1_TR_BL ||
-		ent1->client->ps.torsoAnim == BOTH_A2_TR_BL ||
-		ent1->client->ps.torsoAnim == BOTH_A3_TR_BL ||
-		ent1->client->ps.torsoAnim == BOTH_A4_TR_BL ||
-		ent1->client->ps.torsoAnim == BOTH_A5_TR_BL ||
-		ent1->client->ps.torsoAnim == BOTH_A6_TR_BL ||
-		ent1->client->ps.torsoAnim == BOTH_A7_TR_BL)
-	{
-		//ent1 is attacking diagonally
+	case Q_TR:
 		return WP_SabersCheckLock2(ent1, ent2, LOCK_DIAG_TR);
-	}
-
-	if (ent2->client->ps.torsoAnim == BOTH_A1_TR_BL ||
-		ent2->client->ps.torsoAnim == BOTH_A2_TR_BL ||
-		ent2->client->ps.torsoAnim == BOTH_A3_TR_BL ||
-		ent2->client->ps.torsoAnim == BOTH_A4_TR_BL ||
-		ent2->client->ps.torsoAnim == BOTH_A5_TR_BL ||
-		ent2->client->ps.torsoAnim == BOTH_A6_TR_BL ||
-		ent2->client->ps.torsoAnim == BOTH_A7_TR_BL)
-	{
-		//ent2 is attacking diagonally
-		return WP_SabersCheckLock2(ent2, ent1, LOCK_DIAG_TR);
-	}
-
-	//TL to BR lock
-	if (ent1->client->ps.torsoAnim == BOTH_A1_TL_BR ||
-		ent1->client->ps.torsoAnim == BOTH_A2_TL_BR ||
-		ent1->client->ps.torsoAnim == BOTH_A3_TL_BR ||
-		ent1->client->ps.torsoAnim == BOTH_A4_TL_BR ||
-		ent1->client->ps.torsoAnim == BOTH_A5_TL_BR ||
-		ent1->client->ps.torsoAnim == BOTH_A6_TL_BR ||
-		ent1->client->ps.torsoAnim == BOTH_A7_TL_BR)
-	{
-		//ent1 is attacking diagonally
+	case Q_T:
+		return WP_SabersCheckLock2(ent1, ent2, LOCK_TOP);
+	case Q_TL:
 		return WP_SabersCheckLock2(ent1, ent2, LOCK_DIAG_TL);
+	case Q_L:
+		return WP_SabersCheckLock2(ent1, ent2, LOCK_L);
+	case Q_BL:
+		return WP_SabersCheckLock2(ent1, ent2, LOCK_DIAG_BL);
+	case Q_B:
+		return WP_SabersCheckLock2(ent1, ent2, LOCK_TOP);
+	default:
+		//this shouldn't happen.  just wing it
+		return qfalse;
 	}
-
-	if (ent2->client->ps.torsoAnim == BOTH_A1_TL_BR ||
-		ent2->client->ps.torsoAnim == BOTH_A2_TL_BR ||
-		ent2->client->ps.torsoAnim == BOTH_A3_TL_BR ||
-		ent2->client->ps.torsoAnim == BOTH_A4_TL_BR ||
-		ent2->client->ps.torsoAnim == BOTH_A5_TL_BR ||
-		ent2->client->ps.torsoAnim == BOTH_A6_TL_BR ||
-		ent2->client->ps.torsoAnim == BOTH_A7_TL_BR)
-	{
-		//ent2 is attacking diagonally
-		return WP_SabersCheckLock2(ent2, ent1, LOCK_DIAG_TL);
-	}
-	//T to B lock
-	if (ent1->client->ps.torsoAnim == BOTH_A1_T__B_ ||
-		ent1->client->ps.torsoAnim == BOTH_A2_T__B_ ||
-		ent1->client->ps.torsoAnim == BOTH_A3_T__B_ ||
-		ent1->client->ps.torsoAnim == BOTH_A4_T__B_ ||
-		ent1->client->ps.torsoAnim == BOTH_A5_T__B_ ||
-		ent1->client->ps.torsoAnim == BOTH_A6_T__B_ ||
-		ent1->client->ps.torsoAnim == BOTH_A7_T__B_)
-	{
-		//ent1 is attacking top-down
-		{
-			//ent2 is blocking at top
-			return WP_SabersCheckLock2(ent1, ent2, LOCK_TOP);
-		}
-	}
-
-	if (ent2->client->ps.torsoAnim == BOTH_A1_T__B_ ||
-		ent2->client->ps.torsoAnim == BOTH_A2_T__B_ ||
-		ent2->client->ps.torsoAnim == BOTH_A3_T__B_ ||
-		ent2->client->ps.torsoAnim == BOTH_A4_T__B_ ||
-		ent2->client->ps.torsoAnim == BOTH_A5_T__B_ ||
-		ent2->client->ps.torsoAnim == BOTH_A6_T__B_ ||
-		ent2->client->ps.torsoAnim == BOTH_A7_T__B_)
-	{
-		//ent2 is attacking top-down
-		{
-			//ent1 is blocking at top
-			return WP_SabersCheckLock2(ent2, ent1, LOCK_TOP);
-		}
-	}
-	return qfalse;
 }
 
 qboolean WP_SaberParry(gentity_t* victim, gentity_t* attacker, const int saber_num, const int blade_num)
@@ -29036,6 +28899,8 @@ int IsPressingDashButton(const gentity_t* self)
 	if (g_SerenityJediEngineMode->integer)
 	{
 		if (PM_RunningAnim(self->client->ps.legsAnim)
+			&& !PM_SaberInAttack(self->client->ps.saber_move)
+			&& self->client->pers.cmd.upmove == 0
 			&& !(self->client->buttons & BUTTON_KICK)
 			//&& !Mandalorian_Character(self)
 			&& !self->client->hookhasbeenfired

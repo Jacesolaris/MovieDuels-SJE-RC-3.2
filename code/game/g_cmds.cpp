@@ -50,7 +50,6 @@ extern void ItemUse_Bacta(gentity_t* ent);
 extern gentity_t* G_GetSelfForPlayerCmd();
 extern void ForceDestruction(gentity_t* self);
 extern void ForceStasis(gentity_t* self);
-extern int IsPressingDashButton(const gentity_t* self);
 extern void ItemUse_Jetpack(const gentity_t* ent);
 extern cvar_t* g_SerenityJediEngineMode;
 extern cvar_t* g_AllowReload;

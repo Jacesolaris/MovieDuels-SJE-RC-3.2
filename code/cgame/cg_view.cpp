@@ -41,7 +41,6 @@ extern Vehicle_t* G_IsRidingVehicle(const gentity_t* p_ent);
 
 extern int g_crosshairSameEntTime;
 extern int g_crosshairEntNum;
-extern int IsPressingDashButton(const gentity_t* self);
 
 /*
 =============================================================================

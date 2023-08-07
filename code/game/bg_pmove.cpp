@@ -172,7 +172,6 @@ extern cvar_t* g_stepSlideFix;
 extern cvar_t* g_saberAutoBlocking;
 extern cvar_t* g_noIgniteTwirl;
 extern cvar_t* g_allowdualpistols;
-extern int IsPressingDashButton(const gentity_t* self);
 extern void ItemUse_Jetpack(const gentity_t* ent);
 extern void Jetpack_Off(const gentity_t* ent);
 static void PM_SetWaterLevelAtPoint(vec3_t org, int* waterlevel, int* watertype);
@@ -23703,6 +23702,22 @@ qboolean BG_InSlowBounce(const playerState_t* ps)
 	//checks for a bounce/return animation in combination with the slow bounce flag
 	if (ps->userInt3 & 1 << FLAG_SLOWBOUNCE
 		&& (PM_BounceAnim(ps->torsoAnim) || PM_SaberReturnAnim(ps->torsoAnim)))
+	{
+		//in slow bounce
+		return qtrue;
+	}
+	if (PM_SaberInBounce(ps->saber_move))
+	{
+		//in slow bounce
+		return qtrue;
+	}
+	return qfalse;
+}
+
+qboolean PM_InSlowBounce(const playerState_t* ps)
+{
+	//checks for a bounce/return animation in combination with the slow bounce flag
+	if (ps->userInt3 & 1 << FLAG_SLOWBOUNCE	&& (PM_BounceAnim(ps->torsoAnim)))
 	{
 		//in slow bounce
 		return qtrue;
