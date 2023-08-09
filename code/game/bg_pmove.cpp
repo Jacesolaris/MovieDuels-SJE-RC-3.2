@@ -1291,6 +1291,24 @@ qboolean PM_GentCantJump(const gentity_t* gent)
 	return qfalse;
 }
 
+qboolean PM_Is_A_Dash_Anim(const int anim)
+{
+	switch (anim)
+	{
+	case BOTH_DASH_R:
+	case BOTH_DASH_L:
+	case BOTH_DASH_B:
+	case BOTH_DASH_F:
+	case BOTH_HOP_R:
+	case BOTH_HOP_L:
+	case BOTH_HOP_B:
+	case BOTH_HOP_F:
+		return qtrue;
+	default:;
+	}
+	return qfalse;
+}
+
 static qboolean PM_CheckJump()
 {
 	//Don't allow jump until all buttons are up
@@ -1317,6 +1335,11 @@ static qboolean PM_CheckJump()
 	}
 
 	if (PM_InForceFall())
+	{
+		return qfalse;
+	}
+
+	if (pm->ps->communicatingflags & 1 << DASHING || PM_Is_A_Dash_Anim(pm->ps->torsoAnim))
 	{
 		return qfalse;
 	}
