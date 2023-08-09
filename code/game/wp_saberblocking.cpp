@@ -474,6 +474,76 @@ void sab_beh_add_mishap_attacker(gentity_t* attacker, const int saber_num)
 	}
 }
 
+void sab_beh_add_mishap_Fake_attacker(gentity_t* attacker, const gentity_t* blocker, const int saber_num)
+{
+	if (attacker->client->ps.blockPoints <= MISHAPLEVEL_NONE)
+	{
+		attacker->client->ps.blockPoints = MISHAPLEVEL_NONE;
+	}
+	else if (attacker->client->ps.forcePower <= MISHAPLEVEL_NONE)
+	{
+		attacker->client->ps.forcePower = MISHAPLEVEL_NONE;
+	}
+	else if (attacker->client->ps.saberFatigueChainCount <= MISHAPLEVEL_NONE)
+	{
+		if (g_debugFatigueBars->integer)
+		{
+			attacker->client->ps.saberFatigueChainCount = MISHAPLEVEL_MIN;
+		}
+		else
+		{
+			attacker->client->ps.saberFatigueChainCount = MISHAPLEVEL_NONE;
+		}
+	}
+	else
+	{
+		//overflowing causes a full mishap.
+		const int rand_num = Q_irand(0, 2);
+
+		switch (rand_num)
+		{
+		case 0:
+			if (d_attackinfo->integer || g_DebugSaberCombat->integer)
+			{
+				gi.Printf(S_COLOR_YELLOW"Attacker staggering\n");
+			}
+			SabBeh_AnimateHeavySlowBounceAttacker(attacker);
+			break;
+		case 1:
+			if (blocker->NPC && !G_ControlledByPlayer(blocker)) //NPC only
+			{
+				if (!Q_irand(0, 4))
+				{
+					//20% chance
+					SabBeh_AnimateHeavySlowBounceAttacker(attacker);
+					if (d_attackinfo->integer || g_DebugSaberCombat->integer)
+					{
+						gi.Printf(S_COLOR_YELLOW"Attacker staggering\n");
+					}
+				}
+				else
+				{
+					SabBeh_SaberShouldBeDisarmedAttacker(attacker, saber_num);
+					if (d_attackinfo->integer || g_DebugSaberCombat->integer)
+					{
+						gi.Printf(S_COLOR_RED"NPC Attacker lost his saber\n");
+					}
+				}
+			}
+			else
+			{
+				SabBeh_SaberShouldBeDisarmedAttacker(attacker, saber_num);
+				if (d_attackinfo->integer || g_DebugSaberCombat->integer)
+				{
+					gi.Printf(S_COLOR_RED"player Attacker lost his saber\n");
+				}
+			}
+			break;
+		default:;
+		}
+	}
+}
+
 qboolean sab_beh_attack_blocked(gentity_t* attacker, gentity_t* blocker, const int saber_num,
 	const qboolean force_mishap)
 {
@@ -862,7 +932,7 @@ qboolean sab_beh_attack_vs_block(gentity_t* attacker, gentity_t* blocker, const 
 			}
 
 			SabBeh_AddBalance(blocker, MPCOST_PARRYING_ATTACKFAKE);
-			sab_beh_add_mishap_attacker(attacker, saber_num);
+			sab_beh_add_mishap_Fake_attacker(attacker, blocker, saber_num);
 
 			if (d_attackinfo->integer || g_DebugSaberCombat->integer)
 			{
