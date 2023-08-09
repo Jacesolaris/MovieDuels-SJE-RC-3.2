@@ -57,8 +57,7 @@ extern void SabBeh_AnimateSmallBounce(const gentity_t* self);
 extern qboolean PM_InForceGetUp(const playerState_t* ps);
 extern qboolean PM_InGetUp(const playerState_t* ps);
 extern qboolean PM_SaberInMassiveBounce(int move);
-extern void G_StartStasisEffect_FORCE_LEVEL_1(const gentity_t* ent, int me_flags = 0, int length = 1000,
-	float time_scale = 0.0f, int spin_time = 0);
+extern void G_StartStasisEffect_FORCE_LEVEL_1(const gentity_t* ent, int me_flags = 0, int length = 1000, float time_scale = 0.0f, int spin_time = 0);
 extern cvar_t* d_slowmoaction;
 extern void wp_block_points_regenerate_over_ride(const gentity_t* self, int override_amt);
 extern void WP_ForcePowerRegenerate(const gentity_t* self, int override_amt);
@@ -66,19 +65,17 @@ extern void G_Stagger(gentity_t* hit_ent);
 extern void SabBeh_SaberShouldBeDisarmedBlocker(gentity_t* blocker, int saber_num);
 extern void WP_BlockPointsRegenerate(const gentity_t* self, int override_amt);
 extern qboolean WP_SaberMBlock(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num, vec3_t hit_loc);
-extern qboolean WP_SaberFatiguedParry(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num,
-	vec3_t hit_loc);
+extern qboolean WP_SaberFatiguedParry(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num, vec3_t hit_loc);
 extern qboolean WP_SaberParry(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num);
-extern qboolean WP_SaberBlockedBounceBlock(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num,
-	vec3_t hit_loc);
+extern qboolean WP_SaberBlockedBounceBlock(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num, vec3_t hit_loc);
 extern qboolean WP_SaberNPCParry(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num, vec3_t hit_loc);
-extern qboolean WP_SaberNPCFatiguedParry(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num,
-	vec3_t hit_loc);
+extern qboolean WP_SaberNPCFatiguedParry(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num, vec3_t hit_loc);
 extern qboolean WP_SaberNPCMBlock(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num, vec3_t hit_loc);
-extern qboolean WP_SaberSlowBounceBlock(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num,
-	vec3_t hit_loc);
+extern qboolean WP_SaberSlowBounceBlock(gentity_t* victim, gentity_t* attacker, int saber_num, int blade_num, vec3_t hit_loc);
 extern cvar_t* g_saberAutoBlocking;
 extern void g_do_m_block_response(const gentity_t* speaker_npc_self);
+extern qboolean PM_SaberInKata(saberMoveName_t saber_move);
+extern qboolean g_accurate_blocking(const gentity_t* blocker, const gentity_t* attacker, vec3_t hit_loc);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -677,18 +674,121 @@ void sab_beh_add_mishap_blocker(gentity_t* blocker, const int saber_num)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-qboolean sab_beh_attack_vs_block(gentity_t* attacker, gentity_t* blocker, const int saber_num, const int blade_num)
+qboolean sab_beh_attack_vs_attack(gentity_t* attacker, gentity_t* blocker, const int saber_num)
+{
+	//set the saber behavior for two attacking blades hitting each other
+	const qboolean atkfake = attacker->client->ps.userInt3 & 1 << FLAG_ATTACKFAKE ? qtrue : qfalse;
+	const qboolean otherfake = blocker->client->ps.userInt3 & 1 << FLAG_ATTACKFAKE ? qtrue : qfalse;
+
+	if (atkfake && !otherfake)
+	{
+		//self is solo faking
+		//set self
+		SabBeh_AddBalance(attacker, 1);
+		//set otherOwner
+
+		if (WP_SabersCheckLock(attacker, blocker))
+		{
+			attacker->client->ps.userInt3 |= 1 << FLAG_LOCKWINNER;
+			attacker->client->ps.saberBlocked = BLOCKED_NONE;
+			blocker->client->ps.saberBlocked = BLOCKED_NONE;
+		}
+		SabBeh_AddBalance(blocker, -1);
+	}
+	else if (!atkfake && otherfake)
+	{
+		//only otherOwner is faking
+		//set self
+		if (WP_SabersCheckLock(blocker, attacker))
+		{
+			attacker->client->ps.saberBlocked = BLOCKED_NONE;
+			blocker->client->ps.userInt3 |= 1 << FLAG_LOCKWINNER;
+			blocker->client->ps.saberBlocked = BLOCKED_NONE;
+		}
+		SabBeh_AddBalance(attacker, -1);
+		//set otherOwner
+		SabBeh_AddBalance(blocker, 1);
+	}
+	else if (atkfake && otherfake)
+	{
+		//both faking
+		//set self
+		if (WP_SabersCheckLock(attacker, blocker))
+		{
+			attacker->client->ps.userInt3 |= 1 << FLAG_LOCKWINNER;
+			attacker->client->ps.saberBlocked = BLOCKED_NONE;
+
+			blocker->client->ps.userInt3 |= 1 << FLAG_LOCKWINNER;
+			blocker->client->ps.saberBlocked = BLOCKED_NONE;
+		}
+		SabBeh_AddBalance(attacker, 1);
+		//set otherOwner
+		SabBeh_AddBalance(blocker, 1);
+	}
+	else if (PM_SaberInKata(static_cast<saberMoveName_t>(attacker->client->ps.saber_move)))
+	{
+		SabBeh_AddBalance(attacker, 1);
+		//set otherOwner
+		SabBeh_AddBalance(blocker, -1);
+
+		if (blocker->client->ps.blockPoints < BLOCKPOINTS_TEN)
+		{
+			//Low points = bad blocks
+			SabBeh_SaberShouldBeDisarmedBlocker(blocker, saber_num);
+			wp_block_points_regenerate_over_ride(blocker, BLOCKPOINTS_FATIGUE);
+		}
+		else
+		{
+			//Low points = bad blocks
+			G_Stagger(blocker);
+			PM_AddBlockFatigue(&blocker->client->ps, BLOCKPOINTS_TEN);
+		}
+	}
+	else if (PM_SaberInKata(static_cast<saberMoveName_t>(blocker->client->ps.saber_move)))
+	{
+		SabBeh_AddBalance(attacker, -1);
+		//set otherOwner
+		SabBeh_AddBalance(blocker, 1);
+
+		if (attacker->client->ps.blockPoints < BLOCKPOINTS_TEN)
+		{
+			//Low points = bad blocks
+			SabBeh_SaberShouldBeDisarmedAttacker(attacker, saber_num);
+			wp_block_points_regenerate_over_ride(attacker, BLOCKPOINTS_FATIGUE);
+		}
+		else
+		{
+			//Low points = bad blocks
+			G_Stagger(attacker);
+			PM_AddBlockFatigue(&attacker->client->ps, BLOCKPOINTS_TEN);
+		}
+	}
+	else
+	{
+		//either both are faking or neither is faking.  Either way, it's canceled out
+		//set self
+		SabBeh_AddBalance(attacker, 1);
+		//set otherOwner
+		SabBeh_AddBalance(blocker, 1);
+
+		sab_beh_attack_blocked(attacker, blocker, saber_num, qtrue);
+
+		sab_beh_attack_blocked(blocker, attacker, saber_num, qtrue);
+	}
+	return qtrue;
+}
+
+qboolean sab_beh_attack_vs_block(gentity_t* attacker, gentity_t* blocker, const int saber_num, const int blade_num, vec3_t hit_loc)
 {
 	//if the attack is blocked -(Im the attacker)
-	const qboolean blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_BLOCKING ? qtrue : qfalse;
-	//Normal Blocking (just holding block button)
-	const qboolean m_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_MBLOCKING ? qtrue : qfalse;
-	//perfect Blocking (Timed Block)
-	const qboolean active_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_PROJBLOCKING ? qtrue : qfalse;
-	//Active Blocking (Holding Block button = Attack button)
-	const qboolean npc_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_NPCBLOCKING ? qtrue : qfalse;
-	//(Npc Blocking function)
+	const qboolean accurate_parry = g_accurate_blocking(blocker, attacker, hit_loc); // Perfect Normal Blocking
 
+	const qboolean blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_BLOCKING ? qtrue : qfalse;	//Normal Blocking (just holding block button)
+	const qboolean m_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_MBLOCKING ? qtrue : qfalse;	//perfect Blocking (Timed Block)
+	const qboolean active_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_PROJBLOCKING ? qtrue : qfalse;	//Active Blocking (Holding Block button = Attack button)
+	const qboolean npc_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_NPCBLOCKING ? qtrue : qfalse;
+
+	//(Npc Blocking function)
 	const qboolean atkfake = attacker->client->ps.userInt3 & 1 << FLAG_ATTACKFAKE ? qtrue : qfalse;
 
 	if (pm_saber_innonblockable_attack(attacker->client->ps.torsoAnim))
@@ -721,6 +821,16 @@ qboolean sab_beh_attack_vs_block(gentity_t* attacker, gentity_t* blocker, const 
 			attacker->client->ps.saberEventFlags &= ~SEF_BLOCKED;
 		}
 	}
+	else if (BG_SaberInNonIdleDamageMove(&blocker->client->ps))
+	{
+		//and blocker is attacking
+		if (d_attackinfo->integer || g_DebugSaberCombat->integer)
+		{
+			gi.Printf(S_COLOR_YELLOW"Both Attacker and Blocker are now attacking\n");
+		}
+
+		sab_beh_attack_vs_attack(blocker, attacker, saber_num);
+	}
 	else if (PM_SuperBreakWinAnim(attacker->client->ps.torsoAnim))
 	{
 		//attacker was attempting a superbreak and he hit someone who could block the move, rail him for screwing up.
@@ -737,12 +847,12 @@ qboolean sab_beh_attack_vs_block(gentity_t* attacker, gentity_t* blocker, const 
 	else if (atkfake)
 	{
 		//attacker faked but it was blocked here
-		if (blocking || active_blocking || npc_blocking)
+		if (m_blocking || npc_blocking)
 		{
 			//defender parried the attack fake.
 			SabBeh_AddBalance(attacker, MPCOST_PARRIED_ATTACKFAKE);
 
-			if (active_blocking || npc_blocking) //blocker is
+			if (npc_blocking) //blocker is
 			{
 				attacker->client->ps.userInt3 |= 1 << FLAG_BLOCKED;
 			}
@@ -752,10 +862,11 @@ qboolean sab_beh_attack_vs_block(gentity_t* attacker, gentity_t* blocker, const 
 			}
 
 			SabBeh_AddBalance(blocker, MPCOST_PARRYING_ATTACKFAKE);
+			sab_beh_add_mishap_attacker(attacker, saber_num);
 
 			if (d_attackinfo->integer || g_DebugSaberCombat->integer)
 			{
-				gi.Printf(S_COLOR_YELLOW"Attackers Attack Fake was Blocked\n");
+				gi.Printf(S_COLOR_YELLOW"Attackers Attack Fake was P-Blocked\n");
 			}
 		}
 		else
@@ -770,26 +881,19 @@ qboolean sab_beh_attack_vs_block(gentity_t* attacker, gentity_t* blocker, const 
 				blocker->client->ps.saberBlocked = BLOCKED_NONE;
 			}
 
-			if (!m_blocking)
-			{
-				sab_beh_attack_blocked(attacker, blocker, saber_num, qfalse);
-			}
-
 			if (d_attackinfo->integer || g_DebugSaberCombat->integer)
 			{
-				gi.Printf(S_COLOR_YELLOW"Attacker Attack Fake bounced\n");
+				gi.Printf(S_COLOR_YELLOW"Attacker forced a saberlock\n");
 			}
 		}
 	}
 	else
 	{
 		//standard attack
-		if (blocking || active_blocking || npc_blocking) // All types of active blocking
+		if (accurate_parry || blocking || active_blocking || npc_blocking) // All types of active blocking
 		{
-			if (npc_blocking && (g_SerenityJediEngineMode->integer == 2 && blocker->client->ps.blockPoints >=
-				BLOCKPOINTS_MISSILE
-				|| g_SerenityJediEngineMode->integer == 1 && blocker->client->ps.forcePower >=
-				BLOCKPOINTS_MISSILE)
+			if (npc_blocking && (g_SerenityJediEngineMode->integer == 2 && blocker->client->ps.blockPoints >= BLOCKPOINTS_MISSILE
+				|| g_SerenityJediEngineMode->integer == 1 && blocker->client->ps.forcePower >= BLOCKPOINTS_MISSILE)
 				&& attacker->client->ps.saberFatigueChainCount >= MISHAPLEVEL_HUDFLASH
 				&& !Q_irand(0, 4))
 			{
@@ -872,14 +976,11 @@ qboolean sab_beh_block_vs_attack(gentity_t* blocker, gentity_t* attacker, const 
 	vec3_t hit_loc)
 {
 	//-(Im the blocker)
-	const qboolean blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_BLOCKING ? qtrue : qfalse;
-	//Normal Blocking
-	const qboolean m_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_MBLOCKING ? qtrue : qfalse;
-	//perfect Blocking
-	const qboolean active_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_PROJBLOCKING ? qtrue : qfalse;
-	//Active Blocking
-	const qboolean npc_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_NPCBLOCKING ? qtrue : qfalse;
-	//Active NPC Blocking
+	const qboolean accurate_parry = g_accurate_blocking(blocker, attacker, hit_loc); // Perfect Normal Blocking
+	const qboolean blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_BLOCKING ? qtrue : qfalse;	//Normal Blocking
+	const qboolean m_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_MBLOCKING ? qtrue : qfalse;	//perfect Blocking
+	const qboolean active_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_PROJBLOCKING ? qtrue : qfalse;	//Active Blocking
+	const qboolean npc_blocking = blocker->client->ps.ManualBlockingFlags & 1 << MBF_NPCBLOCKING ? qtrue : qfalse;	//Active NPC Blocking
 
 	if (g_SerenityJediEngineMode->integer)
 	{
@@ -1099,9 +1200,7 @@ qboolean sab_beh_block_vs_attack(gentity_t* blocker, gentity_t* attacker, const 
 						//just so attacker knows that he was blocked
 						attacker->client->ps.saberEventFlags |= SEF_BLOCKED;
 					}
-					else if (npc_blocking || (g_saberAutoBlocking->integer && blocker->NPC && !
-						G_ControlledByPlayer(blocker) || blocker->client->ps.saberBlockingTime > level.time && blocker->
-						NPC && !G_ControlledByPlayer(blocker))) //Other types and npc,s
+					else if ((accurate_parry || npc_blocking)) //Other types and npc,s
 					{
 						if (attacker->client->ps.saber_anim_level == SS_DESANN || attacker->client->ps.saber_anim_level ==
 							SS_STRONG)

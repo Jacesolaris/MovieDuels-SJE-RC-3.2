@@ -201,9 +201,8 @@ qboolean BG_SaberInPartialDamageMove(gentity_t* self);
 extern qboolean PM_KickingAnim(int anim);
 extern qboolean BG_InSlowBounce(const playerState_t* ps);
 extern qboolean PM_InSlowBounce(const playerState_t* ps);
-qboolean G_ActiveParry(gentity_t* self, const gentity_t* attacker, vec3_t hit_loc);
-int WP_SaberMustBlock(gentity_t* self, const gentity_t* atk, qboolean check_b_box_block, vec3_t point, int r_saber_num,
-	int r_blade_num);
+qboolean g_accurate_blocking(const gentity_t* blocker, const gentity_t* attacker, vec3_t hit_loc);
+int WP_SaberMustBlock(gentity_t* self, const gentity_t* atk, qboolean check_b_box_block, vec3_t point, int r_saber_num, int r_blade_num);
 extern qboolean WalkCheck(const gentity_t* self);
 extern qboolean pm_saber_innonblockable_attack(int anim);
 extern int BG_InGrappleMove(int anim);
@@ -257,9 +256,8 @@ void G_StaggerAttacker(gentity_t* atk);
 extern qboolean PM_LungRollAnim(int anim);
 extern qboolean jedi_win_po(const gentity_t* self);
 void WP_BlockPointsDrain(const gentity_t* self, int fatigue);
-extern qboolean sab_beh_attack_vs_block(gentity_t* attacker, gentity_t* blocker, int saber_num, int blade_num);
-extern qboolean sab_beh_block_vs_attack(gentity_t* blocker, gentity_t* attacker, int saber_num, int blade_num,
-	vec3_t hit_loc);
+extern qboolean sab_beh_attack_vs_block(gentity_t* attacker, gentity_t* blocker, int saber_num, int blade_num, vec3_t hit_loc);
+extern qboolean sab_beh_block_vs_attack(gentity_t* blocker, gentity_t* attacker, int saber_num, int blade_num, vec3_t hit_loc);
 extern void g_fatigue_bp_knockaway(gentity_t* blocker);
 void G_Beskar_Attack_Bounce(const gentity_t* self, gentity_t* other);
 extern qboolean Mandalorian_Character(const gentity_t* self);
@@ -9889,7 +9887,7 @@ void wp_saber_damage_trace_amd(gentity_t* ent, int saber_num, int blade_num)
 						sab_beh_block_vs_attack(hit_owner, ent, saber_num, blade_num, saberHitLocation);
 
 						//make me bounce -(Im the attacker)
-						sab_beh_attack_vs_block(ent, hit_owner, saber_num, blade_num);
+						sab_beh_attack_vs_block(ent, hit_owner, saber_num, blade_num, saberHitLocation);
 
 						collision_resolved = qtrue;
 					}
@@ -11280,7 +11278,7 @@ void WP_SaberDamageTrace_MD(gentity_t* ent, int saber_num, int blade_num)
 						sab_beh_block_vs_attack(hit_owner, ent, saber_num, blade_num, saberHitLocation);
 
 						//make me bounce -(Im the attacker)
-						sab_beh_attack_vs_block(ent, hit_owner, saber_num, blade_num);
+						sab_beh_attack_vs_block(ent, hit_owner, saber_num, blade_num, saberHitLocation);
 
 						collision_resolved = qtrue;
 					}
@@ -14930,7 +14928,7 @@ int WP_SaberBlockCost(gentity_t* defender, const gentity_t* attacker, vec3_t hit
 		if (attacker->client->ps.userInt3 & 1 << FLAG_ATTACKFAKE)
 		{
 			//attacker is in an attack fake
-			if (attacker->client->ps.saber_anim_level == SS_STRONG && !G_ActiveParry(defender, attacker, hit_locs))
+			if (attacker->client->ps.saber_anim_level == SS_STRONG && !g_accurate_blocking(defender, attacker, hit_locs))
 			{
 				//Red does additional DP damage with attack fakes if they aren't parried.
 				saber_block_cost = BasicSaberBlockCost(attacker->client->ps.saber_anim_level) * 1.35;
@@ -14969,7 +14967,7 @@ int WP_SaberBlockCost(gentity_t* defender, const gentity_t* attacker, vec3_t hit
 	if (attacker && attacker->client)
 	{
 		//attacker is a player so he must have just hit you with a saber blow.
-		if (G_ActiveParry(defender, attacker, hit_locs))
+		if (g_accurate_blocking(defender, attacker, hit_locs))
 		{
 			//parried this attack, cost is less
 			if (defender->client->ps.saber_anim_level == SS_FAST)
@@ -41543,7 +41541,7 @@ qboolean CheckStagger(gentity_t* defender, const gentity_t* attacker)
 	return staggered;
 }
 
-qboolean G_ActiveParry(gentity_t* self, const gentity_t* attacker, vec3_t hit_loc)
+qboolean g_accurate_blocking(const gentity_t* blocker, const gentity_t* attacker, vec3_t hit_loc)
 {
 	//determines if self (who is blocking) is activating blocking (parrying)
 	vec3_t p_angles;
@@ -41551,13 +41549,11 @@ qboolean G_ActiveParry(gentity_t* self, const gentity_t* attacker, vec3_t hit_lo
 	vec3_t parrier_move{};
 	vec3_t hit_pos;
 	vec3_t hit_flat{}; //flatten 2D version of the hitPos.
-	const qboolean in_front = InFront(attacker->client->ps.origin, self->client->ps.origin, self->client->ps.viewangles,
-		0.0f);
-	qboolean staggered = qfalse;
+	const qboolean in_front = InFront(attacker->client->ps.origin, blocker->client->ps.origin, blocker->client->ps.viewangles, 0.0f);
 
-	if (self->s.number < MAX_CLIENTS || G_ControlledByPlayer(self))
+	if (blocker->s.number < MAX_CLIENTS || G_ControlledByPlayer(blocker))
 	{
-		if (!(self->client->ps.ManualBlockingFlags & 1 << MBF_BLOCKING))
+		if (!(blocker->client->ps.ManualBlockingFlags & 1 << MBF_BLOCKING))
 		{
 			return qfalse;
 		}
@@ -41568,47 +41564,42 @@ qboolean G_ActiveParry(gentity_t* self, const gentity_t* attacker, vec3_t hit_lo
 		//can't parry attacks to the rear.
 		return qfalse;
 	}
-	if (PM_SaberInKnockaway(self->client->ps.saber_move))
+	if (PM_SaberInKnockaway(blocker->client->ps.saber_move))
 	{
 		//already in parry move, continue parrying anything that hits us as long as
 		//the attacker is in the same general area that we're facing.
 		return qtrue;
 	}
 
-	if (PM_KickingAnim(self->client->ps.legsAnim))
+	if (PM_KickingAnim(blocker->client->ps.legsAnim))
 	{
 		//can't parry in kick.
 		return qfalse;
 	}
 
-	if (BG_SaberInNonIdleDamageMove(&self->client->ps)
-		|| PM_SaberInBounce(self->client->ps.saber_move) || BG_InSlowBounce(&self->client->ps))
+	if (BG_SaberInNonIdleDamageMove(&blocker->client->ps)
+		|| PM_SaberInBounce(blocker->client->ps.saber_move) || BG_InSlowBounce(&blocker->client->ps))
 	{
 		//can't parry if we're transitioning into a block from an attack state.
 		return qfalse;
 	}
 
-	if (self->client->ps.pm_flags & PMF_DUCKED)
+	if (blocker->client->ps.pm_flags & PMF_DUCKED)
 	{
 		//can't parry while ducked or running
 		return qfalse;
 	}
 
-	if (in_front)
+	if (blocker->client->ps.ManualblockStartTime >= 3000) //3 sec
 	{
-		staggered = CheckStagger(self, attacker);
-	}
-
-	if (staggered || PM_InKnockDown(&self->client->ps))
-	{
-		//can't block while knocked down or getting up from knockdown, or we are staggered.
+		//cant perfect parry if your too slow
 		return qfalse;
 	}
 
 	//set up flatten version of the location of the incoming attack in orientation
 	//to the player.
-	VectorSubtract(hit_loc, self->client->ps.origin, hit_pos);
-	VectorSet(p_angles, 0, self->client->ps.viewangles[YAW], 0);
+	VectorSubtract(hit_loc, blocker->client->ps.origin, hit_pos);
+	VectorSet(p_angles, 0, blocker->client->ps.viewangles[YAW], 0);
 	AngleVectors(p_angles, nullptr, p_right, nullptr);
 	hit_flat[0] = 0;
 	hit_flat[1] = DotProduct(p_right, hit_pos);
@@ -41619,19 +41610,19 @@ qboolean G_ActiveParry(gentity_t* self, const gentity_t* attacker, vec3_t hit_lo
 
 	//set up the vector for the direction the player is trying to parry in.
 	parrier_move[0] = 0;
-	parrier_move[1] = self->client->pers.cmd.rightmove;
-	parrier_move[2] = -self->client->pers.cmd.forwardmove;
+	parrier_move[1] = blocker->client->pers.cmd.rightmove;
+	parrier_move[2] = -blocker->client->pers.cmd.forwardmove;
 	VectorNormalize(parrier_move);
 
 	const float block_dot = DotProduct(hit_flat, parrier_move);
 
-	if (block_dot >= .4)
+	if (block_dot >= 0.4F)
 	{
 		//player successfully blocked in the right direction to do a full parry.
 		return qtrue;
 	}
 	//player didn't parry in the correct direction, do blockPoints punishment
-	if (self->NPC && !G_ControlledByPlayer(self))
+	if (blocker->NPC && !G_ControlledByPlayer(blocker))
 	{
 		//bots just randomly parry to make up for them not intelligently parrying.
 		if (NPC_PARRYRATE * g_spskill->integer > Q_irand(0, 999))

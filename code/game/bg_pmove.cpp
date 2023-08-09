@@ -15198,7 +15198,7 @@ saberMoveName_t PM_NPCSaberAttackFromQuad(const int quad)
 	{
 		if (g_SerenityJediEngineMode->integer == 2)
 		{
-			if (g_SaberAttackSpeedMD->integer && g_RealisticBlockingMode->integer && //Only proper jedi players get this
+			if (g_SaberAttackSpeedMD->integer && //Only proper jedi players get this
 				g_spskill->integer > 1 &&
 				G_EnoughPowerForSpecialMove(pm->ps->forcePower, SABER_ALT_ATTACK_POWER, qtrue) &&
 				!pm->ps->forcePowersActive && !in_camera)
@@ -23717,7 +23717,7 @@ qboolean BG_InSlowBounce(const playerState_t* ps)
 qboolean PM_InSlowBounce(const playerState_t* ps)
 {
 	//checks for a bounce/return animation in combination with the slow bounce flag
-	if (ps->userInt3 & 1 << FLAG_SLOWBOUNCE	&& (PM_BounceAnim(ps->torsoAnim)))
+	if (ps->userInt3 & 1 << FLAG_SLOWBOUNCE && (PM_BounceAnim(ps->torsoAnim)))
 	{
 		//in slow bounce
 		return qtrue;
