@@ -14110,6 +14110,12 @@ qboolean Manual_NPCSaberblocking(const gentity_t* defender) //Is this guy blocki
 		return qfalse;
 	}
 
+	if (SaberAttacking(defender) && defender->client->ps.saberFatigueChainCount < MISHAPLEVEL_HUDFLASH)
+	{
+		//bots just randomly parry to make up for them not intelligently parrying.
+		return qtrue;
+	}
+
 	return qtrue;
 }
 
