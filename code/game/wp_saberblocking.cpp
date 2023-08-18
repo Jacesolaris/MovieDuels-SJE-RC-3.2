@@ -977,7 +977,6 @@ qboolean sab_beh_attack_vs_block(gentity_t* attacker, gentity_t* blocker, const 
 					{
 						G_StartStasisEffect_FORCE_LEVEL_1(attacker, MEF_NO_SPIN, 200, 0.3f, 0);
 					}
-					CGCam_BlockShakeSP(0.45f, 100);
 				}
 
 				if (g_SerenityJediEngineMode->integer && (blocker->NPC && !G_ControlledByPlayer(blocker)))
@@ -1123,7 +1122,7 @@ qboolean sab_beh_block_vs_attack(gentity_t* blocker, gentity_t* attacker, const 
 						{
 							WP_SaberMBlock(blocker, attacker, saber_num, blade_num, hit_loc);
 
-							if (attacker->client->ps.blockPoints <= BLOCKPOINTS_FATIGUE)
+							if (attacker->client->ps.saberFatigueChainCount >= MISHAPLEVEL_THIRTEEN)
 							{
 								sab_beh_add_mishap_attacker(attacker, saber_num);
 							}
@@ -1464,7 +1463,7 @@ qboolean sab_beh_block_vs_attack(gentity_t* blocker, gentity_t* attacker, const 
 						{
 							WP_SaberMBlock(blocker, attacker, saber_num, blade_num, hit_loc);
 
-							if (attacker->client->ps.forcePower <= BLOCKPOINTS_FATIGUE)
+							if (attacker->client->ps.saberFatigueChainCount >= MISHAPLEVEL_THIRTEEN)
 							{
 								sab_beh_add_mishap_attacker(attacker, saber_num);
 							}

@@ -14093,7 +14093,6 @@ void PM_SetSaberMove(saberMoveName_t new_move)
 	int anim = saberMoveData[new_move].animToUse;
 	int parts = SETANIM_TORSO;
 	qboolean manual_blocking = qfalse;
-	const gentity_t* ent = &g_entities[pm->ps->client_num];
 
 	const qboolean holding_block = pm->ps->ManualBlockingFlags & 1 << MBF_BLOCKING ? qtrue : qfalse;
 	//Holding Block Button
@@ -14478,7 +14477,7 @@ void PM_SetSaberMove(saberMoveName_t new_move)
 				anim = BOTH_S1_S7;
 			}
 		}
-		else if (DarthMaulHolster(ent))
+		else if (DarthMaulHolster(pm->gent))
 		{
 			if (g_SerenityJediEngineMode->integer == 2)
 			{
@@ -14500,7 +14499,7 @@ void PM_SetSaberMove(saberMoveName_t new_move)
 				anim = BOTH_S1_S7;
 			}
 		}
-		else if (SaberStaffWeapon(ent) && pm->ps->saber[0].holsterPlace == HOLSTER_RHIPB)
+		else if (SaberStaffWeapon(pm->gent) && pm->ps->saber[0].holsterPlace == HOLSTER_RHIPB)
 		{
 			if (g_SerenityJediEngineMode->integer == 2)
 			{
@@ -14566,12 +14565,12 @@ void PM_SetSaberMove(saberMoveName_t new_move)
 		{
 			anim = BOTH_S7_S1;
 		}
-		else if (DarthMaulHolster(ent))
+		else if (DarthMaulHolster(pm->gent))
 		{
 			anim = BOTH_S7_S1;
 		}
-		else if (SaberStaffWeapon(ent)
-			&& pm->ps->saber[0].holsterPlace == HOLSTER_RHIPB && !DarthMaulHolster(ent))
+		else if (SaberStaffWeapon(pm->gent)
+			&& pm->ps->saber[0].holsterPlace == HOLSTER_RHIPB && !DarthMaulHolster(pm->gent))
 		{
 			anim = BOTH_S7_S1;
 		}
