@@ -658,7 +658,6 @@ void NPC_SetMiscDefaultData(gentity_t* ent)
 	switch (ent->client->playerTeam)
 	{
 	case TEAM_PLAYER:
-	{
 		if (ent->client->NPC_class == CLASS_SEEKER)
 		{
 			ent->NPC->defaultBehavior = BS_DEFAULT;
@@ -676,6 +675,7 @@ void NPC_SetMiscDefaultData(gentity_t* ent)
 		{
 			//good jedi
 			ent->client->enemyTeam = TEAM_ENEMY;
+			NPCInfo->scriptFlags |= SCF_PILOT;
 			if (ent->spawnflags & JSF_AMBUSH)
 			{
 				//ambusher
@@ -830,6 +830,8 @@ void NPC_SetMiscDefaultData(gentity_t* ent)
 			case WP_BRYAR_PISTOL:
 			case WP_CLONEPISTOL:
 			case WP_JAWA:
+				NPCInfo->scriptFlags |= SCF_PILOT;
+				break;
 			case WP_SBD_BLASTER:
 				break;
 
@@ -840,10 +842,12 @@ void NPC_SetMiscDefaultData(gentity_t* ent)
 			case WP_FLECHETTE:
 			case WP_ROCKET_LAUNCHER:
 			case WP_CONCUSSION:
+				NPCInfo->scriptFlags |= SCF_PILOT;
 			default:
 				break;
 			case WP_THERMAL:
 			case WP_BLASTER:
+				NPCInfo->scriptFlags |= SCF_PILOT;
 				ST_ClearTimers(ent);
 				if ((ent->NPC->rank >= RANK_LT || ent->client->ps.weapon == WP_THERMAL) && com_outcast->integer == 1)
 				{
@@ -857,27 +861,26 @@ void NPC_SetMiscDefaultData(gentity_t* ent)
 				NPC_GalakMech_Init(ent);
 			}
 		}
-	}
-	if (ent->client->NPC_class == CLASS_PLAYER
-		|| ent->client->NPC_class == CLASS_VEHICLE
-		|| ent->spawnflags & SFB_CINEMATIC)
-	{
-		ent->NPC->defaultBehavior = BS_CINEMATIC;
-	}
-	else
-	{
-		if (g_noAutoFollow->integer)
+		if (ent->client->NPC_class == CLASS_PLAYER
+			|| ent->client->NPC_class == CLASS_VEHICLE
+			|| ent->spawnflags & SFB_CINEMATIC)
 		{
-			ent->NPC->defaultBehavior = BS_STAND_GUARD;
-			ent->client->leader = nullptr;
+			ent->NPC->defaultBehavior = BS_CINEMATIC;
 		}
 		else
 		{
-			ent->NPC->defaultBehavior = BS_FOLLOW_LEADER;
-			ent->client->leader = &g_entities[0]; //player
+			if (g_noAutoFollow->integer)
+			{
+				ent->NPC->defaultBehavior = BS_STAND_GUARD;
+				ent->client->leader = nullptr;
+			}
+			else
+			{
+				ent->NPC->defaultBehavior = BS_FOLLOW_LEADER;
+				ent->client->leader = &g_entities[0]; //player
+			}
 		}
-	}
-	break;
+		break;
 	case TEAM_NEUTRAL:
 
 		if (Q_stricmp(ent->NPC_type, "gonk") == 0)
@@ -925,6 +928,7 @@ void NPC_SetMiscDefaultData(gentity_t* ent)
 			ent->client->NPC_class == CLASS_SHADOWTROOPER)
 		{
 			ent->client->enemyTeam = TEAM_PLAYER;
+			NPCInfo->scriptFlags |= SCF_PILOT;
 			if (ent->spawnflags & JSF_AMBUSH)
 			{
 				//ambusher
@@ -992,6 +996,7 @@ void NPC_SetMiscDefaultData(gentity_t* ent)
 			case WP_JAWA:
 			case WP_JANGO:
 			case WP_CLONEPISTOL:
+				NPCInfo->scriptFlags |= SCF_PILOT;
 				break;
 			case WP_BLASTER_PISTOL:
 				NPCInfo->scriptFlags |= SCF_PILOT;
@@ -1024,6 +1029,7 @@ void NPC_SetMiscDefaultData(gentity_t* ent)
 					//they do this themselves
 				{
 					//dual blaster pistols, so add the left-hand one, too
+					NPCInfo->scriptFlags |= SCF_PILOT;
 
 					if (com_kotor->integer == 1) //playing kotor
 					{
@@ -1048,6 +1054,7 @@ void NPC_SetMiscDefaultData(gentity_t* ent)
 					//they do this themselves
 				{
 					//dual blaster pistols, so add the left-hand one, too
+					NPCInfo->scriptFlags |= SCF_PILOT;
 
 					if (com_kotor->integer == 1) //playing kotor
 					{

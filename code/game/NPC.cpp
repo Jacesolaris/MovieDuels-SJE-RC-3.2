@@ -1699,6 +1699,10 @@ void NPC_RunBehavior(const int team, const int b_state)
 	{
 		NPC_BSCinematic();
 	}
+	else if ((NPCInfo->scriptFlags & SCF_PILOT) && Pilot_MasterUpdate())
+	{
+		return;
+	}
 	else if (!TIMER_Done(NPC, "DEMP2_StunTime"))
 	{
 		NPC_UpdateAngles(qtrue, qtrue);
@@ -2369,7 +2373,7 @@ void NPC_Think(gentity_t* ent) //, int msec )
 	{
 		IIcarusInterface::GetIcarus()->Update(ent->m_iIcarusID);
 	}
-}
+	}
 
 void NPC_InitAI()
 {
